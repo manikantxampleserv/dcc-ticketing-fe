@@ -102,14 +102,7 @@ const routes: RouteType[] = [
   },
   {
     path: '/customers',
-    element: (
-      <CustomerManagement
-        onCreateUser={() => {}}
-        onUpdateUser={() => {}}
-        onDeleteUser={() => {}}
-        onToggleUserStatus={() => {}}
-      />
-    ),
+    element: <CustomerManagement />,
     title: 'Customer Management',
     status: true,
     requiresAuth: true
@@ -184,3 +177,4 @@ const Routers = () => {
 };
 
 export default Routers;
+export { routes };

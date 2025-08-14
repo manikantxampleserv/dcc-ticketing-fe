@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { deleteUserFn, usersFn } from 'services/users';
+import { deleteUserFn, usersFn } from 'services/Users';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import { User } from 'types';
 import ManageUsers from './ManageUsers';
@@ -115,23 +115,21 @@ const UserManagement = () => {
     },
     {
       key: 'role',
-      dataIndex: 'role',
+      dataIndex: 'user_role',
       title: 'ROLE',
-
       sortable: true,
-      render: role => (
-        <Chip size="sm" variant="soft" color={getRoleColorJoy(role)}>
-          {role}
+      render: text => (
+        <Chip size="sm" variant="soft" color={getRoleColorJoy(text?.name)}>
+          {text?.name}
         </Chip>
       )
     },
     {
       key: 'department',
-      dataIndex: 'department',
+      dataIndex: 'user_department',
+      render: text => <Typography level="body-sm">{text?.department_name || '-'}</Typography>,
       title: 'DEPARTMENT',
-
-      sortable: true,
-      render: department => <Typography level="body-sm">{department || '-'}</Typography>
+      sortable: true
     },
     {
       key: 'phone',
@@ -281,7 +279,7 @@ const UserManagement = () => {
             setSelectedUserKeys(selectedKeys);
           },
           getCheckboxProps: record => ({
-            disabled: record.role?.toLowerCase() === 'admin' && Number(record.id) === 1
+            disabled: record.user_role?.name?.toLowerCase() === 'admin' && Number(record.id) === 1
           })
         }}
         toolbar={{

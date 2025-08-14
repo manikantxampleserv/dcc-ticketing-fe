@@ -40,7 +40,7 @@ const UserProfile = () => {
     last_name: user?.last_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    department: user?.department || ''
+    department_id: user?.department_id || ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -117,10 +117,10 @@ const UserProfile = () => {
                 <div className="flex items-center space-x-3">
                   <span
                     className={`inline-flex px-3 py-1 text-sm font-medium rounded-full border ${getRoleColor(
-                      user?.role || ''
+                      user?.user_role?.name || ''
                     )}`}
                   >
-                    {user?.role}
+                    {user?.user_role?.name}
                   </span>
                   <span
                     className={`inline-flex px-3 py-1 text-sm font-medium rounded-full border ${getStatusColor(
@@ -262,8 +262,8 @@ const UserProfile = () => {
                       className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 ${
                         !isEditing ? 'bg-gray-50 text-gray-600' : ''
                       }`}
-                      value={formData.department}
-                      onChange={e => setFormData({ ...formData, department: e.target.value })}
+                      value={formData.department_id}
+                      onChange={e => setFormData({ ...formData, department_id: e.target.value })}
                     />
                   </div>
                 </div>
@@ -286,8 +286,8 @@ const UserProfile = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-700">Role:</span>
-                      <span className={`text-sm px-2 py-1 rounded-full ${getRoleColor(user?.role || '')}`}>
-                        {user?.role}
+                      <span className={`text-sm px-2 py-1 rounded-full ${getRoleColor(user?.user_role?.name || '')}`}>
+                        {user?.user_role?.name}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -317,7 +317,7 @@ const UserProfile = () => {
                   <Ticket className="h-8 w-8 text-blue-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-blue-600">Active Tickets</p>
-                    <p className="text-2xl font-bold text-blue-900">{user?.active_tickets_count || 0}</p>
+                    <p className="text-2xl font-bold text-blue-900">{0}</p>
                   </div>
                 </div>
               </div>
@@ -327,7 +327,7 @@ const UserProfile = () => {
                   <CheckCircle className="h-8 w-8 text-green-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-green-600">Resolved</p>
-                    <p className="text-2xl font-bold text-green-600">{user?.resolved_tickets_count || 0}</p>
+                    <p className="text-2xl font-bold text-green-600">{0}</p>
                   </div>
                 </div>
               </div>
@@ -337,7 +337,7 @@ const UserProfile = () => {
                   <Clock className="h-8 w-8 text-yellow-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-yellow-600">Avg Response</p>
-                    <p className="text-2xl font-bold text-yellow-600">{user?.avg_response_time || '0h'}</p>
+                    <p className="text-2xl font-bold text-yellow-600">{0}</p>
                   </div>
                 </div>
               </div>
@@ -347,7 +347,7 @@ const UserProfile = () => {
                   <Activity className="h-8 w-8 text-purple-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-purple-600">SLA Compliance</p>
-                    <p className="text-2xl font-bold text-purple-600">{user?.sla_compliance_percent || 0}%</p>
+                    <p className="text-2xl font-bold text-purple-600">{0}%</p>
                   </div>
                 </div>
               </div>

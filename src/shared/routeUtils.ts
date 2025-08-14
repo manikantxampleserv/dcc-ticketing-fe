@@ -1,4 +1,4 @@
-import routes from '../routes';
+import { routes } from '../routes';
 
 /**
  * Get navigation routes (excluding detail pages and login)

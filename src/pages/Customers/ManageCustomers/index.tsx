@@ -3,18 +3,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFormik } from 'formik';
 import React from 'react';
 import toast from 'react-hot-toast';
-import { createUserFn, updateUserFn } from 'services/Users';
+import { createCustomerFn, updateCustomerFn } from 'services/Customers';
 import CustomFilePicker from 'shared/CustomFilePicker';
 import CustomInput from 'shared/CustomInput';
 import CustomRadioInput from 'shared/CustomRadioInput';
 import CustomSelect from 'shared/CustomSelect';
-import { User } from 'types';
+import { Customer } from 'types/Customers';
 
-const ManageUsers: React.FC<{
+const ManageCustomers: React.FC<{
   open: boolean;
   setOpen: (open: boolean) => void;
-  selected: User | null;
-  setSelected: (user: User | null) => void;
+  selected: Customer | null;
+  setSelected: (user: Customer | null) => void;
 }> = ({ open, setOpen, selected, setSelected }) => {
   const isEdit = !!selected;
   const client = useQueryClient();
@@ -23,23 +23,23 @@ const ManageUsers: React.FC<{
     setSelected(null);
   };
 
-  const { mutate: createUser, isPending: isCreatingUser } = useMutation({
-    mutationFn: createUserFn,
+  const { mutate: createCustomer, isPending: isCreatingCustomer } = useMutation({
+    mutationFn: createCustomerFn,
     onSuccess: response => {
       toast.success(response.message);
       setOpen(false);
       setSelected(null);
-      client.refetchQueries({ queryKey: ['users'] });
+      client.refetchQueries({ queryKey: ['customers'] });
     }
   });
 
-  const { mutate: updateUser, isPending: isUpdatingUser } = useMutation({
-    mutationFn: updateUserFn,
+  const { mutate: updateCustomer, isPending: isUpdatingCustomer } = useMutation({
+    mutationFn: updateCustomerFn,
     onSuccess: response => {
       toast.success(response.message);
       setOpen(false);
       setSelected(null);
-      client.refetchQueries({ queryKey: ['users'] });
+      client.refetchQueries({ queryKey: ['customers'] });
     }
   });
 
@@ -49,10 +49,7 @@ const ManageUsers: React.FC<{
     email: selected?.email || '',
     password: '',
     confirm_password: '',
-    role: selected?.role || '',
-    department: selected?.department || '',
     is_active: selected?.is_active || 'true',
-    avatar: selected?.avatar || '',
     phone: selected?.phone || ''
   };
 
@@ -61,9 +58,9 @@ const ManageUsers: React.FC<{
     enableReinitialize: true,
     onSubmit: values => {
       if (isEdit) {
-        updateUser({ ...values, id: selected?.id } as unknown as User);
+        updateCustomer({ ...values, id: selected?.id } as unknown as Customer);
       } else {
-        createUser(values as unknown as User);
+        createCustomer(values as unknown as Customer);
       }
     }
   });
@@ -80,7 +77,7 @@ const ManageUsers: React.FC<{
       >
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-lg font-semibold">{isEdit ? 'Edit User' : 'Create User'}</p>
+            <p className="text-lg font-semibold">{isEdit ? 'Edit Customer' : 'Create Customer'}</p>
             <p className="text-sm text-gray-500">Fill in the information of the user.</p>
           </div>
           <ModalClose onClick={() => setOpen(false)} />
@@ -119,8 +116,8 @@ const ManageUsers: React.FC<{
             <Button color="neutral" onClick={handleClose}>
               Cancel
             </Button>
-            <Button disabled={isEdit ? isUpdatingUser : isCreatingUser} color="primary" type="submit">
-              {isEdit ? (isUpdatingUser ? 'Updating...' : 'Update') : isCreatingUser ? 'Creating...' : 'Create'}
+            <Button disabled={isEdit ? isUpdatingCustomer : isCreatingCustomer} color="primary" type="submit">
+              {isEdit ? (isUpdatingCustomer ? 'Updating...' : 'Update') : isCreatingCustomer ? 'Creating...' : 'Create'}
             </Button>
           </div>
         </form>
@@ -129,4 +126,4 @@ const ManageUsers: React.FC<{
   );
 };
 
-export default ManageUsers;
+export default ManageCustomers;

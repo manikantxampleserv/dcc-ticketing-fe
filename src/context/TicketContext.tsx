@@ -26,17 +26,17 @@ const initialState: TicketState = {
   agents: [],
   currentUser: null,
   stats: {
-    totalTickets: 0,
-    openTickets: 0,
-    inProgressTickets: 0,
-    resolvedTickets: 0,
-    closedTickets: 0,
-    slaBreached: 0,
-    avgResolutionTime: 0,
-    customerSatisfaction: 0,
-    firstResponseTime: 0,
-    avgResponseTime: 0,
-    escalatedTickets: 0
+    total_tickets: 0,
+    open_tickets: 0,
+    in_progress_tickets: 0,
+    resolved_tickets: 0,
+    closed_tickets: 0,
+    sla_breached: 0,
+    avg_resolution_time: 0,
+    customer_satisfaction: 0,
+    first_response_time: 0,
+    avg_response_time: 0,
+    escalated_tickets: 0
   },
   slaConfig: {
     high: 4,
@@ -101,36 +101,36 @@ export function TicketProvider({ children }: { children: React.ReactNode }) {
     const inProgressTickets = tickets.filter(t => t.status === 'in-progress').length;
     const resolvedTickets = tickets.filter(t => t.status === 'resolved').length;
     const closedTickets = tickets.filter(t => t.status === 'closed').length;
-    const slaBreached = tickets.filter(t => t.slaStatus === 'breached').length;
+    const slaBreached = tickets.filter(t => t.sla_status === 'breached').length;
 
-    const resolvedTicketsWithTime = tickets.filter(t => t.resolvedAt && t.createdAt);
+    const resolvedTicketsWithTime = tickets.filter(t => t.resolved_at && t.created_at);
     const avgResolutionTime =
       resolvedTicketsWithTime.length > 0
         ? resolvedTicketsWithTime.reduce((acc, ticket) => {
-            const created = new Date(ticket.createdAt).getTime();
-            const resolved = new Date(ticket.resolvedAt!).getTime();
+            const created = new Date(ticket.created_at).getTime();
+            const resolved = new Date(ticket.resolved_at!).getTime();
             return acc + (resolved - created) / (1000 * 60 * 60); // hours
           }, 0) / resolvedTicketsWithTime.length
         : 0;
 
-    const ticketsWithRating = tickets.filter(t => t.customerSatisfaction);
+    const ticketsWithRating = tickets.filter(t => t.customer_satisfaction);
     const customerSatisfaction =
       ticketsWithRating.length > 0
-        ? ticketsWithRating.reduce((acc, t) => acc + (t.customerSatisfaction || 0), 0) / ticketsWithRating.length
+        ? ticketsWithRating.reduce((acc, t) => acc + (t.customer_satisfaction || 0), 0) / ticketsWithRating.length
         : 0;
 
     const stats: DashboardStats = {
-      totalTickets,
-      openTickets,
-      inProgressTickets,
-      resolvedTickets,
-      closedTickets,
-      slaBreached,
-      avgResolutionTime,
-      customerSatisfaction,
-      firstResponseTime: 0,
-      avgResponseTime: 0,
-      escalatedTickets: 0
+      total_tickets: totalTickets,
+      open_tickets: openTickets,
+      in_progress_tickets: inProgressTickets,
+      resolved_tickets: resolvedTickets,
+      closed_tickets: closedTickets,
+      sla_breached: slaBreached,
+      avg_resolution_time: avgResolutionTime,
+      customer_satisfaction: customerSatisfaction,
+      first_response_time: 0,
+      avg_response_time: 0,
+      escalated_tickets: 0
     };
 
     dispatch({ type: 'SET_STATS', payload: stats });

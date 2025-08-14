@@ -9,7 +9,7 @@ const Navigation = () => {
     <nav className="space-y-1">
       {navigationRoutes.map(route => (
         <Link
-          key={route.id}
+          key={route.path}
           to={route.path}
           className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
             location.pathname === route.path

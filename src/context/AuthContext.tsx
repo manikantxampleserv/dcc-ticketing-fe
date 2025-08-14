@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { createContext, ReactNode, useContext, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { getCurrentUserFn, loginFn, logoutFn, type LoginCredentials, type User } from '../services/authentication';
+import { getCurrentUserFn, loginFn, logoutFn, type LoginCredentials } from '../services/Authentication';
+import { User } from 'types/index';
 
 interface AuthContextType {
   user: User | null;
@@ -14,7 +15,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const authKeys = {
+const authKeys = {
   all: ['auth'] as const,
   user: () => [...authKeys.all, 'user'] as const
 };

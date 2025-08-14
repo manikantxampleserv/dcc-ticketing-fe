@@ -64,16 +64,22 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'admin' | 'supervisor' | 'agent' | 'customer';
-  department?: string;
-  phone?: string;
-  avatar?: string;
+  role_id: string;
+  department_id: string;
+  phone: string;
+  avatar: string;
   is_active: boolean;
-  last_login_at?: string;
+  last_login_at: string;
   created_at: string;
-  permissions: string[];
-  password_hash: string;
-  password: string;
+  updated_at: string;
+  user_role: {
+    id: string;
+    name: string;
+  };
+  user_department: {
+    id: string;
+    department_name: string;
+  };
 }
 
 export interface TicketMerge {
@@ -110,7 +116,7 @@ export interface Agent {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'agent' | 'supervisor';
+  role: 'admin' | 'manager' | 'agent';
   avatar?: string;
   is_active: boolean;
   performance: AgentPerformance;
@@ -150,7 +156,7 @@ export interface EscalationRule {
   name: string;
   priority: 'high' | 'medium' | 'low';
   time_threshold_hours: number;
-  escalate_to_role: 'supervisor' | 'admin';
+  escalate_to_role: 'manager' | 'admin';
   is_active: boolean;
   notification_channels: ('email' | 'slack' | 'sms')[];
 }
@@ -179,4 +185,15 @@ export interface TeamView {
   is_shared: boolean;
   created_by: string;
   team_members: string[];
+}
+
+export interface RequestParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+}
+
+export interface DeleteRequestData {
+  ids: number[];
 }

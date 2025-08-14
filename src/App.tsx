@@ -7,16 +7,7 @@ function App() {
     <ContextProvider>
       <div className="min-h-screen bg-gray-50">
         <Routers />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#363636',
-              color: '#fff'
-            }
-          }}
-        />
+        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       </div>
     </ContextProvider>
   );

@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import { Lock, Mail, Ticket } from 'lucide-react';
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginFn } from 'services/authentication';
+import { loginFn } from 'services/Authentication';
 import CustomInput from 'shared/CustomInput';
 
 const Login: React.FC = () => {
@@ -31,7 +31,6 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo/Brand Section */}
         <div className="flex justify-center">
           <div className="bg-primary-600 p-3 rounded-lg">
             <Ticket className="h-8 w-8 text-white" />
@@ -44,7 +43,6 @@ const Login: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-sm sm:rounded-lg sm:px-10 border border-gray-200">
           <form className="space-y-6" onSubmit={formik.handleSubmit}>
-            {/* Email Field */}
             <CustomInput
               label="Email"
               formik={formik}
@@ -54,7 +52,6 @@ const Login: React.FC = () => {
               startDecorator={<Mail size={20} />}
             />
 
-            {/* Password Field */}
             <CustomInput
               label="Password"
               formik={formik}
@@ -64,7 +61,6 @@ const Login: React.FC = () => {
               startDecorator={<Lock size={20} />}
             />
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -90,7 +86,6 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
             <div>
               <button
                 type="submit"
@@ -109,7 +104,6 @@ const Login: React.FC = () => {
             </div>
           </form>
 
-          {/* Additional Links */}
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -131,7 +125,6 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-500">Protected by enterprise security • Support Portal v2.1</p>
         </div>

@@ -33,7 +33,9 @@ export default defineConfig({
       'shared/*': path.resolve(__dirname, './src/shared/*'),
       shared: path.resolve(__dirname, './src/shared'),
       'types/*': path.resolve(__dirname, './src/types/*'),
-      types: path.resolve(__dirname, './src/types')
+      types: path.resolve(__dirname, './src/types'),
+      'utils/*': path.resolve(__dirname, './src/utils/*'),
+      utils: path.resolve(__dirname, './src/utils')
     }
   }
 });

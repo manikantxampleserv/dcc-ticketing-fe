@@ -1,424 +1,287 @@
-import { useQuery } from '@tanstack/react-query';
+import { Avatar, Button, Chip, IconButton, Input, Stack, Typography } from '@mui/joy';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { usersFn } from 'services/users';
-import { User } from '../../types';
+import { customersFn, deleteCustomerFn } from 'services/Customers';
+import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
+import { Customer } from 'types/Customers';
+import ManageCustomers from './ManageCustomers';
 
-interface CustomerManagementProps {
-  onCreateUser: (userData: Partial<User>) => void;
-  onUpdateUser: (userId: string, userData: Partial<User>) => void;
-  onDeleteUser: (userId: string) => void;
-  onToggleUserStatus: (userId: string, is_active: boolean) => void;
-}
-
-const CustomerManagement = ({
-  onCreateUser,
-  onUpdateUser,
-  onDeleteUser,
-  onToggleUserStatus
-}: CustomerManagementProps) => {
+const CustomersManagement = () => {
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Customer | null>(null);
+  const [selectedCustomersKeys, setSelectedCustomersKeys] = useState<React.Key[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
-  const { data: usersData } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => usersFn({})
+  const { data: customersData, isLoading } = useQuery({
+    queryKey: ['customers', currentPage, pageSize, search],
+    queryFn: () =>
+      customersFn({
+        page: currentPage,
+        limit: pageSize,
+        search: search || undefined
+      })
   });
 
-  const users = usersData?.data;
+  const customers = customersData?.data || [];
+  const pagination = customersData?.pagination;
 
-  const handleCreateUser = (userData: Partial<User>) => {
-    onCreateUser(userData);
-    setShowCreateModal(false);
-    toast.success('User created successfully');
+  const handleToggleCustomerStatus = async (user: Customer) => {
+    try {
+      console.log('Toggle status for user:', user.id);
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+    }
   };
+  const client = useQueryClient();
+  const { mutate: deleteCustomers } = useMutation({
+    mutationFn: deleteCustomerFn,
+    onSuccess: response => {
+      toast.success(response.message);
+      setOpen(false);
+      setSelected(null);
+      client.refetchQueries({ queryKey: ['customers'] });
+    }
+  });
 
-  const handleUpdateUser = (userData: Partial<User>) => {
-    if (editingUser) {
-      onUpdateUser(editingUser.id, userData);
-      setEditingUser(null);
-      toast.success('User updated successfully');
+  const handleDeleteCustomer = async (user: Customer) => {
+    if (window.confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
+      try {
+        deleteCustomers({ ids: [Number(user.id)] });
+      } catch (error) {
+        console.error('Error deleting user:', error);
+      }
     }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      onDeleteUser(userId);
-      toast.success('User deleted successfully');
+  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
+    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected users?`)) {
+      try {
+        deleteCustomers({ ids: selectedKeys.map(key => Number(key)) });
+        setSelectedCustomersKeys([]);
+      } catch (error) {
+        console.error('Error deleting selected users:', error);
+      }
     }
   };
 
-  const handleToggleStatus = (userId: string, currentStatus: boolean) => {
-    onToggleUserStatus(userId, !currentStatus);
-    toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-800';
-      case 'supervisor':
-        return 'bg-blue-100 text-blue-800';
-      case 'agent':
-        return 'bg-green-100 text-green-800';
-      case 'customer':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const columns: CustomTableColumn<Customer>[] = [
+    {
+      key: 'customer',
+      dataIndex: 'first_name',
+      title: 'CUSTOMER',
+      width: 250,
+      sortable: true,
+      render: (_: any, record: Customer) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Avatar alt={`${record.first_name} ${record.last_name}`} size="md" sx={{ '--Avatar-size': '40px' }}>
+            {record.first_name?.[0]?.toUpperCase() || 'U'}
+          </Avatar>
+          <div>
+            <Typography level="body-sm" fontWeight="md" sx={{ textTransform: 'capitalize' }}>
+              {`${record.first_name || ''} ${record.last_name || ''}`.trim()}
+            </Typography>
+            <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
+              {record.email}
+            </Typography>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'company',
+      dataIndex: 'companies',
+      title: 'COMPANY',
+      sortable: true,
+      render: (companies: Customer['companies']) => (
+        <div>
+          <Typography level="body-sm" fontWeight="md">
+            {companies?.company_name || '-'}
+          </Typography>
+          <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
+            {companies?.domain || '-'}
+          </Typography>
+        </div>
+      )
+    },
+    {
+      key: 'job_title',
+      dataIndex: 'job_title',
+      title: 'JOB TITLE',
+      sortable: true,
+      render: (jobTitle: string) => (
+        <Typography level="body-sm" sx={{ textTransform: 'capitalize' }}>
+          {jobTitle || '-'}
+        </Typography>
+      )
+    },
+    {
+      key: 'phone',
+      dataIndex: 'phone',
+      title: 'PHONE',
+      render: (phone: string) => (
+        <Typography level="body-sm" sx={{ fontFamily: 'monospace' }}>
+          {phone || '-'}
+        </Typography>
+      )
+    },
+    {
+      key: 'status',
+      dataIndex: 'is_active',
+      title: 'STATUS',
+      align: 'center',
+      sortable: true,
+      render: (isActive: boolean) => (
+        <Chip size="sm" variant="soft" color={isActive ? 'success' : 'danger'}>
+          {isActive ? 'Active' : 'Inactive'}
+        </Chip>
+      )
+    },
+    {
+      key: 'created',
+      dataIndex: 'created_at',
+      title: 'CREATED',
+      sortable: true,
+      render: (createdAt: string) => <Typography level="body-sm">{new Date(createdAt).toLocaleDateString()}</Typography>
+    },
+    {
+      key: 'actions',
+      fixed: 'right',
+      dataIndex: 'id',
+      title: 'ACTIONS',
+      align: 'right',
+      render: (_: any, record: Customer) => (
+        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          <IconButton
+            size="sm"
+            variant="plain"
+            color="primary"
+            onClick={e => {
+              e.stopPropagation();
+              setSelected(record);
+              setOpen(true);
+            }}
+          >
+            <Edit size={16} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            variant="plain"
+            color={record.is_active ? 'danger' : 'success'}
+            onClick={e => {
+              e.stopPropagation();
+              handleToggleCustomerStatus(record);
+            }}
+          >
+            {record.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
+          </IconButton>
+          <IconButton
+            size="sm"
+            variant="plain"
+            color="danger"
+            onClick={e => {
+              e.stopPropagation();
+              handleDeleteCustomer(record);
+            }}
+          >
+            <Trash2 size={16} />
+          </IconButton>
+        </Stack>
+      )
     }
-  };
-
+  ];
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
-          <p className="text-gray-600">Manage system customers and their permissions</p>
+          <p className="text-gray-600">Manage system users and their permissions</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center"
+        <Button
+          onClick={() => {
+            setSelected(null);
+            setOpen(true);
+          }}
+          startDecorator={<Plus size={16} />}
+          size="md"
         >
-          <Plus className="mr-2 h-4 w-4" />
           Add Customer
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex justify-between items-center">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
+          <div className="flex items-center gap-3">
+            <Input
               type="text"
-              placeholder="Search customers..."
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Search Customers..."
               value={search}
               onChange={e => setSearch(e.target.value)}
+              startDecorator={<Search size={16} />}
+              sx={{ width: '320px' }}
             />
           </div>
-
-          {/* Role Filter */}
-          <select
-            className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            value={roleFilter}
-            onChange={e => setRoleFilter(e.target.value)}
-          >
-            <option value="all">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="supervisor">Supervisor</option>
-            <option value="agent">Agent</option>
-            <option value="customer">Customer</option>
-          </select>
-
-          {/* Stats */}
-          {/* <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <span>Total: {users?.length}</span>
-            <span>Active: {users?.filter((u: User) => u.is_active).length}</span>
-            <span>Inactive: {users?.filter((u: User) => !u.is_active).length}</span>
-          </div> */}
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {' '}
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Department
-                </th>
+      {/* Customers Table using CustomTable */}
+      <CustomTable
+        columns={columns}
+        dataSource={customers}
+        rowKey="id"
+        loading={isLoading}
+        rowSelection={{
+          type: 'checkbox',
+          selectedRowKeys: selectedCustomersKeys,
+          onChange: selectedKeys => {
+            setSelectedCustomersKeys(selectedKeys);
+          },
+          getCheckboxProps: record => ({
+            disabled: record.is_active === true && Number(record.id) === 1
+          })
+        }}
+        toolbar={{
+          title: `Customers (${pagination?.total_count || 0})`,
+          showFilter: true,
+          onDelete: handleDeleteSelected
+        }}
+        pagination={{
+          current: pagination?.current_page || 1,
+          pageSize: pageSize,
+          total: pagination?.total_count || 0,
+          showSizeChanger: true,
+          pageSizeOptions: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }
+        }}
+        size="md"
+        onRow={record => ({
+          onClick: () => {
+            console.log('Row clicked:', record);
+          }
+        })}
+      />
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Login
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users?.map((user: User) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        {user.avatar ? (
-                          <img className="h-10 w-10 rounded-full" src={user.avatar} alt={user.first_name} />
-                        ) : (
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <Users className="h-5 w-5 text-gray-600" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm capitalize font-medium text-gray-900">
-                          {user?.first_name + ' ' + user?.last_name}
-                        </div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}
-                    >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.department || '-'}</td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {user.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.last_login_at ? new Date(user.last_login_at).toLocaleDateString() : 'Never'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button onClick={() => setEditingUser(user)} className="text-indigo-600 hover:text-indigo-900">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleStatus(user.id, user.is_active)}
-                        className={`${
-                          user.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
-                        }`}
-                      >
-                        {user.is_active ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                      </button>
-                      <button onClick={() => handleDeleteUser(user.id)} className="text-red-600 hover:text-red-900">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Empty State */}
+      {!isLoading && customers.length === 0 && (
+        <div className="text-center py-12">
+          <Users className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No customers found</h3>
+          <p className="mt-1 text-sm text-gray-500">{search || 'Try adjusting your search criteria.'}</p>
         </div>
-
-        {users?.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
-            <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filter criteria.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Create/Edit User Modal */}
-      {(showCreateModal || editingUser) && (
-        <UserModal
-          user={editingUser}
-          onSave={editingUser ? handleUpdateUser : handleCreateUser}
-          onClose={() => {
-            setShowCreateModal(false);
-            setEditingUser(null);
-          }}
-        />
       )}
+
+      <ManageCustomers open={open} setOpen={setOpen} selected={selected} setSelected={setSelected} />
     </div>
   );
 };
 
-// User Modal Component
-interface UserModalProps {
-  user?: User | null;
-  onSave: (userData: Partial<User>) => void;
-  onClose: () => void;
-}
-
-function UserModal({ user, onSave, onClose }: UserModalProps) {
-  const [formData, setFormData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
-    firstName: user?.first_name || '',
-    lastName: user?.last_name || '',
-    role: user?.role || 'agent',
-    department: user?.department || '',
-    phone: user?.phone || '',
-    password: '',
-    confirmPassword: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!user && formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    const userData: Partial<User> = {
-      username: formData.username,
-      email: formData.email,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      role: formData.role as User['role'],
-      department: formData.department,
-      phone: formData.phone
-    };
-
-    onSave(userData);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">{user ? 'Edit User' : 'Create New User'}</h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                value={formData.firstName}
-                onChange={e => setFormData({ ...formData, firstName: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                value={formData.lastName}
-                onChange={e => setFormData({ ...formData, lastName: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input
-              type="text"
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              value={formData.username}
-              onChange={e => setFormData({ ...formData, username: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                value={formData.role}
-                onChange={e =>
-                  setFormData({
-                    ...formData,
-                    role: e.target.value as User['role']
-                  })
-                }
-              >
-                <option value="agent">Agent</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                value={formData.department}
-                onChange={e => setFormData({ ...formData, department: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
-              type="tel"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              value={formData.phone}
-              onChange={e => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
-
-          {!user && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input
-                  type="password"
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                  value={formData.password}
-                  onChange={e => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                <input
-                  type="password"
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                  value={formData.confirmPassword}
-                  onChange={e =>
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value
-                    })
-                  }
-                />
-              </div>
-            </>
-          )}
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700">
-              {user ? 'Update' : 'Create'} User
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-export default CustomerManagement;
+export default CustomersManagement;
