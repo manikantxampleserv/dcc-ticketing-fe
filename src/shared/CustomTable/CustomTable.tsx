@@ -196,7 +196,6 @@ const CustomTable = <T extends Record<string, any> = any>({
       variant={bordered ? 'outlined' : 'plain'}
       sx={{
         width: '100%',
-        boxShadow: 'sm',
         borderRadius: 'sm',
         display: 'flex',
         flexDirection: 'column',
