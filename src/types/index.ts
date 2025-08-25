@@ -1,33 +1,35 @@
-export interface Ticket {
-  id: string;
-  ticket_number: string;
-  subject: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  customer_name: string;
-  customer_email: string;
-  customer_company: string;
-  assigned_to?: string;
-  assigned_by?: string;
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  closed_at?: string;
-  last_reopened_at?: string;
-  sla_deadline: string;
-  sla_status: 'within' | 'approaching' | 'breached';
-  tags: string[];
-  attachments: TicketAttachment[];
-  responses: TicketResponse[];
-  time_spent: number; // in minutes
-  customer_satisfaction?: number; // 1-5 rating
-  feedback_comment?: string;
-  is_merged?: boolean;
-  merged_into_ticket_id?: string;
-  reopen_count?: number;
-  merged_tickets?: string[]; // IDs of tickets merged into this one
-}
+// export interface Ticket {
+//   id: string;
+//   ticket_number: string;
+//   subject: string;
+//   description: string;
+//   priority: 'low' | 'medium' | 'high';
+//   status: 'open' | 'in-progress' | 'resolved' | 'closed';
+//   customer_name: string;
+//   customer_email: string;
+//   customer_company: string;
+//   assigned_to?: string;
+//   assigned_by?: string;
+//   created_at: string;
+//   updated_at: string;
+//   resolved_at?: string;
+//   closed_at?: string;
+//   last_reopened_at?: string;
+//   sla_deadline: string;
+//   sla_status: 'within' | 'approaching' | 'breached';
+//   tags: string[];
+//   attachments: TicketAttachment[];
+//   responses: TicketResponse[];
+//   time_spent: number; // in minutes
+//   customer_satisfaction?: number; // 1-5 rating
+//   feedback_comment?: string;
+//   is_merged?: boolean;
+//   merged_into_ticket_id?: string;
+//   reopen_count?: number;
+//   merged_tickets?: string[]; // IDs of tickets merged into this one
+// }
+
+import axiosInstance from 'configs/axios';
 
 export interface TicketResponse {
   id: string;
@@ -196,4 +198,115 @@ export interface RequestParams {
 
 export interface DeleteRequestData {
   ids: number[];
+}
+//
+export interface SystemSetting {
+  id: number;
+  setting_key: string;
+  setting_value: string;
+  data_type: 'string' | 'number' | 'boolean' | 'json';
+  description?: string;
+}
+
+export interface EmailConfiguration {
+  id: number;
+  smtp_server: string;
+  smtp_port: number;
+  username: string;
+  password: string;
+  enable_tls?: boolean;
+  from_email: string;
+  from_name: string;
+  auto_reply_enabled?: boolean;
+  auto_reply_message?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SLAConfiguration {
+  id: number;
+  priority: 'low' | 'medium' | 'high';
+  response_time_hours: number;
+  resolution_time_hours: number;
+  business_hours_only?: boolean;
+  business_start_time?: string;
+  include_weekends?: boolean;
+  business_end_time?: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Ticket {
+  id: number;
+  ticket_number: string;
+  customer_id: number;
+  assigned_agent_id: number;
+  category_id: number;
+  subject: string;
+  description: string;
+  priority: 'Low' | 'Medium' | 'High';
+  status: 'Open' | 'In Progress' | 'Closed';
+  source?: string;
+  sla_deadline?: string | null;
+  sla_status?: string | null;
+  first_response_at?: string | null;
+  resolved_at?: string | null;
+  closed_at?: string | null;
+  assigned_by?: number;
+  is_merged?: boolean;
+  reopen_count?: number;
+  time_spent_minutes?: number;
+  last_reopened_at?: string | null;
+  customer_satisfaction_rating?: number | null;
+  customer_feedback?: string | null;
+  tags?: string;
+  merged_into_ticket_id?: number | null;
+  created_at: string;
+  updated_at: string;
+  users?: Record<string, any>; // you can expand this if you have a proper User type
+  customers?: {
+    id: number;
+    [key: string]: any;
+  };
+}
+export interface TicketsResponse {
+  data: Ticket[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
+}
+
+export interface TicketType {
+  id: number;
+  ticket_number: string;
+  subject: string;
+  description: string;
+  priority: 'High' | 'Medium' | 'Low';
+  status: 'Open' | 'Pending' | 'Resolved' | 'Closed';
+  customer_id?: number;
+  assigned_agent_id?: number;
+  category_id?: number;
+  tags?: string;
+
+  // Optional nested objects if you’re using them
+  customers?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+  assigned_agent?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+  category?: {
+    id: number;
+    category_name: string;
+  };
 }

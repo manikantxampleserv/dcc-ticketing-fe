@@ -11,10 +11,12 @@ import Dashboard from 'pages/Dashboard';
 import Login from 'pages/Login';
 import Settings from 'pages/Settings';
 import TicketDetail from 'pages/TicketDetail';
-import Tickets from 'pages/Tickets';
+import Tickets from 'pages/Ticket';
 import { ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from 'layout';
+import SystemSettingsManagement from 'pages/SystemSetting';
+import EmailConfigurationsManagement from 'pages/EmailConfiguration';
 
 interface RouteType {
   path: string;
@@ -132,6 +134,14 @@ const routes: RouteType[] = [
     title: 'Team Views',
     status: true,
     requiresAuth: true
+  },
+  {
+    path: '/system-setting',
+    element: <SystemSettingsManagement />,
+    title: 'System Settings',
+    status: true,
+    requiresAuth: true,
+    icon: 'Sliders'
   }
 ];
 
