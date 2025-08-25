@@ -111,7 +111,6 @@ export const useColumnVisibility = <T>(columns: CustomTableColumn<T>[]) => {
     setVisibleColumns(prev => (visible ? [...prev, columnKey] : prev.filter(key => key !== columnKey)));
   }, []);
 
-  // Update visible columns when columns prop changes
   React.useEffect(() => {
     const newVisibleColumns = columns
       .filter(col => !col.hidden)

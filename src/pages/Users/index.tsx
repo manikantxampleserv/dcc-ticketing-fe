@@ -4,8 +4,8 @@ import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-reac
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { deleteUserFn, usersFn } from 'services/Users';
-import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import { User } from 'types';
+import { CustomTable, CustomTableColumn } from '@manikantsharma/react-table';
 import ManageUsers from './ManageUsers';
 
 const UserManagement = () => {
@@ -279,7 +279,7 @@ const UserManagement = () => {
             setSelectedUserKeys(selectedKeys);
           },
           getCheckboxProps: record => ({
-            disabled: record.user_role?.name?.toLowerCase() === 'admin' && Number(record.id) === 1
+            disabled: record.user_role?.name?.toLowerCase() === 'admin'
           })
         }}
         toolbar={{

@@ -37,5 +37,8 @@ export default defineConfig({
       'utils/*': path.resolve(__dirname, './src/utils/*'),
       utils: path.resolve(__dirname, './src/utils')
     }
+  },
+  server: {
+    host: '0.0.0.0'
   }
 });
