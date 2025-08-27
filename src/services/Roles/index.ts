@@ -8,7 +8,7 @@ import { Role } from 'types/Roles';
  * Fetch roles list
  * @param {Object} params - request parameters
  * @param {number} [params.page=1] - page number
- * @param {number} [params.limit=10] - limit of records per page
+ * @param {number} [params.limit=10] - of records per page
  * @param {string} [params.search] - search query
  * @returns {Promise<Object>} - response data
  */
