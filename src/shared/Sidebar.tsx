@@ -1,4 +1,4 @@
-import { AlertTriangle, BarChart3, Eye, LayoutDashboard, Settings, Ticket, Users, User } from 'lucide-react';
+import { AlertTriangle, BarChart3, Eye, LayoutDashboard, Settings, Ticket, Users, UserCog } from 'lucide-react';
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTickets } from '../context/TicketContext';
@@ -6,11 +6,12 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Tickets', href: '/tickets', icon: Ticket },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Users', href: '/users', icon: User },
+  { name: 'Users', href: '/users', icon: Users },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Team Views', href: '/team-views', icon: Eye },
   { name: 'Escalations', href: '/escalations', icon: AlertTriangle },
-  { name: 'Settings', href: '/settings', icon: Settings }
+  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Roles', href: '/roles', icon: UserCog }
 ];
 const Sidebar: React.FC = () => {
   const { state } = useTickets();
