@@ -13,6 +13,7 @@ import Settings from 'pages/Settings';
 import TicketDetail from 'pages/TicketDetail';
 import Tickets from 'pages/Tickets';
 import RolesManagement from 'pages/Roles';
+import DepartmentManagement from 'pages/Department';
 import { ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from 'layout';
@@ -112,6 +113,13 @@ const routes: RouteType[] = [
     path: '/roles',
     element: <RolesManagement />,
     title: 'Roles Management',
+    status: true,
+    requiresAuth: true
+  },
+  {
+    path: '/department',
+    element: <DepartmentManagement />,
+    title: 'Department Management',
     status: true,
     requiresAuth: true
   },

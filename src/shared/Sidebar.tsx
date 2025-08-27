@@ -2,6 +2,7 @@ import { AlertTriangle, BarChart3, Eye, LayoutDashboard, Settings, Ticket, Users
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTickets } from '../context/TicketContext';
+
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Tickets', href: '/tickets', icon: Ticket },
@@ -11,7 +12,8 @@ const navigation = [
   { name: 'Team Views', href: '/team-views', icon: Eye },
   { name: 'Escalations', href: '/escalations', icon: AlertTriangle },
   { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Roles', href: '/roles', icon: UserCog }
+  { name: 'Roles', href: '/roles', icon: UserCog },
+  { name: 'Department', href: '/department', icon: UserCog }
 ];
 const Sidebar: React.FC = () => {
   const { state } = useTickets();
