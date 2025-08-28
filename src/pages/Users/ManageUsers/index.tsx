@@ -48,7 +48,7 @@ const ManageUsers: React.FC<{
     first_name: selected?.first_name || '',
     last_name: selected?.last_name || '',
     email: selected?.email || '',
-    password: '',
+    password_hash: '',
     confirm_password: '',
     role_id: selected?.role_id || '',
     department_id: selected?.department_id || '',

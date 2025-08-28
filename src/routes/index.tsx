@@ -10,9 +10,14 @@ import CustomerManagement from 'pages/Customers';
 import Dashboard from 'pages/Dashboard';
 import Login from 'pages/Login';
 import Settings from 'pages/Settings';
-import TicketDetail from 'pages/TicketDetail';
-import Tickets from 'pages/Tickets';
+// import TicketDetail from 'pages/TicketDetail';
+// import Tickets from 'pages/Tickets';
+import TicketManagement from 'pages/Ticket';
+// import TicketManagement from 'pages/Ticket';
+import CompaniesManagement from 'pages/Companies';
+import CategoriesManagement from 'pages/Category';
 import RolesManagement from 'pages/Roles';
+import DepartmentManagement from 'pages/Department';
 import { ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from 'layout';
@@ -55,22 +60,47 @@ const routes: RouteType[] = [
     status: true,
     requiresAuth: true
   },
+  // {
+  //   path: '/tickets',
+  //   element: <Tickets />,
+  //   title: 'Tickets',
+  //   status: true,
+  //   requiresAuth: true,
+  //   icon: 'Tickets'
+  // },
   {
-    path: '/tickets',
-    element: <Tickets />,
-    title: 'Tickets',
+    path: '/ticket',
+    element: <TicketManagement />, // 👈 correct component name
+    title: 'Ticket',
     status: true,
     requiresAuth: true,
     icon: 'Ticket'
   },
   {
-    path: '/tickets/:id',
-    element: <TicketDetail />,
-    title: 'Ticket Detail',
+    path: '/categories',
+    element: <CategoriesManagement />, // 👈 correct component name
+    title: 'Categories',
     status: true,
     requiresAuth: true,
-    icon: 'FileText'
+    icon: 'FolderTree'
   },
+  {
+    path: '/companies',
+    element: <CompaniesManagement />,
+    title: 'Companies',
+    status: true,
+    requiresAuth: true,
+    icon: 'Building2'
+  },
+
+  // {
+  //   path: '/tickets/:id',
+  //   element: <TicketDetail />,
+  //   title: 'Ticket Detail',
+  //   status: true,
+  //   requiresAuth: true,
+  //   icon: 'FileText'
+  // },
   {
     path: '/analytics',
     element: <Analytics />,
@@ -112,6 +142,13 @@ const routes: RouteType[] = [
     path: '/roles',
     element: <RolesManagement />,
     title: 'Roles Management',
+    status: true,
+    requiresAuth: true
+  },
+  {
+    path: '/department',
+    element: <DepartmentManagement />,
+    title: 'Department Management',
     status: true,
     requiresAuth: true
   },

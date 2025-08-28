@@ -47,7 +47,7 @@ export const updateUserFn = async (body: User) => {
   reqBody.append('first_name', body.first_name);
   reqBody.append('last_name', body.last_name);
   reqBody.append('email', body.email);
-  reqBody.append('password_hash', body.password_hash);
+  reqBody.append('password_hash', body.password_hash || '');
   reqBody.append('role_id', body.role_id);
   reqBody.append('department_id', body?.department_id || '');
   reqBody.append('is_active', body.is_active ? 'true' : 'false');
