@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { deleteUserFn, usersFn } from 'services/Users';
+// import { deleteUserFn, usersFn } from 'services/Users';
+import { deleteUserFn, usersFn } from 'services/users';
 import { User } from 'types';
 import { CustomTable, CustomTableColumn } from '@manikantsharma/react-table';
 import ManageUsers from './ManageUsers';
@@ -24,7 +25,7 @@ const UserManagement = () => {
         page: currentPage,
         limit: pageSize,
         search: search || undefined,
-        role: roleFilter !== 'all' ? roleFilter : undefined
+        role_id: roleFilter !== 'all' ? roleFilter : undefined
       })
   });
 

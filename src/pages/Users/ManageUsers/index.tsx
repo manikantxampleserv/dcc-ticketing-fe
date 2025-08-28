@@ -3,7 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFormik } from 'formik';
 import React from 'react';
 import toast from 'react-hot-toast';
-import { createUserFn, updateUserFn } from 'services/Users';
+// import { createUserFn, updateUserFn } from 'services/Users';
+import { createUserFn, updateUserFn } from 'services/users';
 import CustomFilePicker from 'shared/CustomFilePicker';
 import CustomInput from 'shared/CustomInput';
 import CustomRadioInput from 'shared/CustomRadioInput';
@@ -49,8 +50,8 @@ const ManageUsers: React.FC<{
     email: selected?.email || '',
     password: '',
     confirm_password: '',
-    role: selected?.role || '',
-    department: selected?.department || '',
+    role_id: selected?.role_id || '',
+    department_id: selected?.department_id || '',
     is_active: selected?.is_active || 'true',
     avatar: selected?.avatar || '',
     phone: selected?.phone || ''

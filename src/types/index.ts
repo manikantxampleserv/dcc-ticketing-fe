@@ -64,6 +64,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  password_hash: string;
   role_id: string;
   department_id: string;
   phone: string;
