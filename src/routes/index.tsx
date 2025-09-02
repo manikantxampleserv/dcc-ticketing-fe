@@ -1,26 +1,27 @@
-import UserProfile from 'pages/UserProfile';
 import EscalationManager from 'components/EscalationManager';
 import ProtectedRoute from 'components/ProtectedRoute';
 import PublicRoute from 'components/PublicRoute';
 import SharedTicketViews from 'components/SharedTicketViews';
-import UserManagement from 'pages/Users';
 import { AuthProvider } from 'context/AuthContext';
 import Analytics from 'pages/Analytics';
 import CustomerManagement from 'pages/Customers';
 import Dashboard from 'pages/Dashboard';
 import Login from 'pages/Login';
 import Settings from 'pages/Settings';
+import UserProfile from 'pages/UserProfile';
+import UserManagement from 'pages/Users';
 // import TicketDetail from 'pages/TicketDetail';
 // import Tickets from 'pages/Tickets';
 import TicketManagement from 'pages/Ticket';
 // import TicketManagement from 'pages/Ticket';
-import CompaniesManagement from 'pages/Companies';
+import Layout from 'layout';
 import CategoriesManagement from 'pages/Category';
-import RolesManagement from 'pages/Roles';
+import CompaniesManagement from 'pages/Companies';
 import DepartmentManagement from 'pages/Department';
+import RolesManagement from 'pages/Roles';
+import SystemSettingsManagement from 'pages/SystemSetting';
 import { ReactElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import Layout from 'layout';
 
 interface RouteType {
   path: string;
@@ -177,6 +178,14 @@ const routes: RouteType[] = [
     title: 'Team Views',
     status: true,
     requiresAuth: true
+  },
+  {
+    path: '/system-setting',
+    element: <SystemSettingsManagement />,
+    title: 'System Settings',
+    status: true,
+    requiresAuth: true,
+    icon: 'Sliders'
   }
 ];
 
