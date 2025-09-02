@@ -4,7 +4,7 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestCo
  * Base URL for API requests.
  * @type {string}
  */
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1/';
+const baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1/';
 
 /**
  * Creates and configures an Axios instance with baseURL and request/response interceptors.
@@ -16,39 +16,25 @@ const createAxiosInstance = (baseURL: string): AxiosInstance => {
 
   // Request interceptor
   instance.interceptors.request.use(
-    /**
-     * Interceptor function to add Authorization header to the request config.
-     * @param {import("axios").AxiosRequestConfig} config - Axios request config.
-     * @returns {import("axios").AxiosRequestConfig} - Updated Axios request config.
-     */
-    (config: InternalAxiosRequestConfig<any>): InternalAxiosRequestConfig<any> => {
+    (config: InternalAxiosRequestConfig<any>) => {
       const Authorization = 'Bearer ' + localStorage.getItem('auth_token');
       config.headers.set('Authorization', Authorization);
       return config;
     },
 
-    /**
-     * Interceptor error handler for request.
-     * @param {import("axios").AxiosError} error - Axios error object.
-     * @returns {Promise<never>} - Promise rejection with error.
-     */
-    (error: AxiosError): Promise<never> => Promise.reject(error)
+    (error: AxiosError) => Promise.reject(error)
   );
 
   // Response interceptor
   instance.interceptors.response.use(
-    /**
-     * Interceptor function for successful response.
-     * @param {import("axios").AxiosResponse} response - Axios response object.
-     * @returns {import("axios").AxiosResponse} - The response object.
-     */
-    (response: AxiosResponse): AxiosResponse => response,
-    /**
-     * Interceptor error handler for response.
-     * @param {import("axios").AxiosError} error - Axios error object.
-     * @returns {Promise<never>} - Promise rejection with error.
-     */
-    (error: AxiosError): Promise<never> => Promise.reject(error)
+    (response: AxiosResponse) => response,
+    async (error: AxiosError) => {
+      if (error.response?.status === 401) {
+        localStorage.clear();
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
   );
 
   return instance;

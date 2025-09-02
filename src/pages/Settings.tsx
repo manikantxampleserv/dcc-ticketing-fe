@@ -692,12 +692,10 @@ export default function Settings() {
     queryFn: () => emailConfigurationFn({ page: 1, limit: 10 })
   }) as { data: EmailConfigApiResponse | undefined };
 
-  const { data: slaData, isLoading } = useQuery({
+  const { data: slaData } = useQuery({
     queryKey: ['sla-config'],
     queryFn: slaFn
   });
-  console.log('SLA API response:', slaData);
-  console.log('Raw SLA API response:', slaData);
 
   const [slaSettings, setSlaSettings] = useState({
     priority: 'High',
@@ -778,27 +776,25 @@ export default function Settings() {
     mutationFn: id => deleteEmailConfigurationFn(id),
     onSuccess: res => {
       toast.success(res.message || 'Email configuration deleted');
-      setEmailSettings(defaultEmailSettings);
+      setEmailSettings({
+        smtp_server: 'smtp.gmail.com',
+        smtp_port: 587,
+        username: 'sapsupport@doubleclick.co.tz',
+        password: '',
+        enable_tls: true,
+        auto_reply_enabled: true,
+        auto_reply_message:
+          'Thank you for contacting DoubleClick IT Support. We have received your request and will respond within our SLA timeframe.',
+        from_email: 'abc@gmail.com',
+        from_name: 'hrms',
+        is_active: true
+      });
       queryClient.invalidateQueries({ queryKey: ['email-configurations'] });
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Delete failed');
     }
   });
-
-  const defaultEmailSettings = {
-    smtpServer: 'smtp.gmail.com',
-    smtpPort: 587,
-    username: 'sapsupport@doubleclick.co.tz',
-    password: '',
-    enableTLS: true,
-    autoReply: true,
-    autoReplyMessage:
-      'Thank you for contacting DoubleClick IT Support. We have received your request and will respond within our SLA timeframe.',
-    fromEmail: 'abc@gmail.com',
-    fromName: 'hrms',
-    isActive: true
-  };
 
   const [emailSettings, setEmailSettings] = useState({
     smtp_server: 'smtp.gmail.com',
@@ -922,6 +918,7 @@ export default function Settings() {
           </div>
           <div className="space-y-4">
             <CustomInput
+              name="smtp_server"
               label="SMTP Server"
               type="text"
               value={emailSettings.smtp_server}
@@ -929,6 +926,7 @@ export default function Settings() {
             />
 
             <CustomInput
+              name="smtp_port"
               label="Port"
               type="number"
               value={emailSettings.smtp_port}
@@ -936,6 +934,7 @@ export default function Settings() {
             />
 
             <CustomInput
+              name="username"
               label="Username"
               type="email"
               value={emailSettings.username}
@@ -945,6 +944,7 @@ export default function Settings() {
             />
 
             <CustomInput
+              name="from_email"
               label="From Email"
               type="email"
               value={emailSettings.from_email}
@@ -952,6 +952,7 @@ export default function Settings() {
             />
 
             <CustomInput
+              name="from_name"
               label="From Name"
               type="text"
               value={emailSettings.from_name}
@@ -959,6 +960,7 @@ export default function Settings() {
             />
 
             <CustomInput
+              name="password"
               label="Password"
               type="password"
               value={emailSettings.password}
@@ -983,23 +985,6 @@ export default function Settings() {
               />
               <span className="ml-2 text-sm text-gray-600">Enable Auto Reply</span>
             </label>
-
-            {emailSettings.autoReply && (
-              <textarea
-                rows={3}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-                value={emailSettings.autoReplyMessage}
-                onChange={e => setEmailSettings({ ...emailSettings, autoReplyMessage: e.target.value })}
-              />
-            )}
-            {emailSettings.auto_reply_enabled && (
-              <textarea
-                rows={3}
-                className="w-full border border-gray-300 rounded-md px-3 py-2"
-                value={emailSettings.auto_reply_message}
-                onChange={e => setEmailSettings({ ...emailSettings, auto_reply_message: e.target.value })}
-              />
-            )}
 
             <div className="flex space-x-3">
               <button
@@ -1031,12 +1016,14 @@ export default function Settings() {
 
           <div className="space-y-4">
             <CustomInput
+              name="priority"
               label="Priority"
               value={slaSettings.priority ?? ''}
               onChange={e => setSlaSettings({ ...slaSettings, priority: e.target.value })}
             />
 
             <CustomInput
+              name="response_time_hours"
               label="Response Time (hours)"
               value={slaSettings.response_time_hours ?? ''}
               onChange={e =>
@@ -1049,6 +1036,7 @@ export default function Settings() {
             />
 
             <CustomInput
+              name="resolution_time_hours"
               label="Resolution Time (hours)"
               value={slaSettings.resolution_time_hours ?? ''}
               onChange={e =>
@@ -1078,15 +1066,17 @@ export default function Settings() {
             {slaSettings.business_hours_only && (
               <div className="grid grid-cols-2 gap-4">
                 <CustomInput
+                  name="business_start_time"
                   label="Business Start"
                   value={slaSettings.business_start_time ?? ''}
-                  onChange={(value: string) => setSlaSettings({ ...slaSettings, business_start_time: value })}
+                  onChange={e => setSlaSettings({ ...slaSettings, business_start_time: e.target.value })}
                   type="time"
                 />
                 <CustomInput
+                  name="business_end_time"
                   label="Business End"
                   value={slaSettings.business_end_time ?? ''}
-                  onChange={(value: string) => setSlaSettings({ ...slaSettings, business_end_time: value })}
+                  onChange={e => setSlaSettings({ ...slaSettings, business_end_time: e.target.value })}
                   type="time"
                 />
               </div>
@@ -1235,17 +1225,16 @@ export default function Settings() {
 
             <div>
               <CustomInput
+                name="warningThreshold"
                 label="SLA Warning Threshold (%)"
                 value={notificationSettings.warningThreshold.toString()}
-                onChange={(value: string) => {
+                onChange={e =>
                   setNotificationSettings({
                     ...notificationSettings,
-                    warningThreshold: parseInt(value) || 0
-                  });
-                }}
+                    warningThreshold: parseInt(e.target.value) || 0
+                  })
+                }
                 type="number"
-                min="0"
-                max="100"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Send warning when {notificationSettings.warningThreshold}% of SLA time has elapsed
@@ -1271,37 +1260,25 @@ export default function Settings() {
           <div className="space-y-4">
             <CustomInput
               label="Company Name"
+              name="companyName"
               value={generalSettings.companyName}
-              onChange={(value: string) => {
-                setGeneralSettings({
-                  ...generalSettings,
-                  companyName: value
-                });
-              }}
+              onChange={e => setGeneralSettings({ ...generalSettings, companyName: e.target.value })}
               type="text"
             />
 
             <CustomInput
               label="Support Email"
+              name="supportEmail"
               value={generalSettings.supportEmail}
-              onChange={(value: string) => {
-                setGeneralSettings({
-                  ...generalSettings,
-                  supportEmail: value
-                });
-              }}
+              onChange={e => setGeneralSettings({ ...generalSettings, supportEmail: e.target.value })}
               type="email"
             />
 
             <CustomInput
               label="Ticket Prefix"
+              name="ticketPrefix"
               value={generalSettings.ticketPrefix}
-              onChange={(value: string) => {
-                setGeneralSettings({
-                  ...generalSettings,
-                  ticketPrefix: value
-                });
-              }}
+              onChange={e => setGeneralSettings({ ...generalSettings, ticketPrefix: e.target.value })}
               type="text"
             />
 
