@@ -7,6 +7,7 @@ import { categoriesFn, deleteCategoryFn } from 'services/Category'; // 👈 Cate
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageCategory from './ManageCategory'; // 👈 Category modal
 import { Category } from 'types/Category'; // 👈 Category type
+import PopConfirm from 'components/PopConfirm'; // 👈 PopConfirm import
 
 const CategoriesManagement = () => {
   const [search, setSearch] = useState('');
@@ -30,41 +31,20 @@ const CategoriesManagement = () => {
   const pagination = categoriesData?.pagination;
 
   const client = useQueryClient();
-  const { mutate: deleteCategories } = useMutation({
+  const { mutateAsync: deleteCategories, isPending: isDeleting } = useMutation({
     mutationFn: deleteCategoryFn,
     onSuccess: response => {
       toast.success(response.message);
-      setOpen(false);
       setSelected(null);
       client.refetchQueries({ queryKey: ['categories'] });
     }
   });
 
-  const handleDeleteCategory = async (category: Category) => {
-    if (window.confirm(`Are you sure you want to delete category "${category.name}"?`)) {
-      try {
-        deleteCategories({ ids: [Number(category.id)] });
-      } catch (error) {
-        console.error('Error deleting category:', error);
-      }
-    }
-  };
-
-  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected categories?`)) {
-      try {
-        deleteCategories({ ids: selectedKeys.map(key => Number(key)) });
-        setSelectedCategoriesKeys([]);
-      } catch (error) {
-        console.error('Error deleting selected categories:', error);
-      }
-    }
-  };
-
+  // ✅ Columns with PopConfirm in Delete Action
   const columns: CustomTableColumn<Category>[] = [
     {
       key: 'name',
-      dataIndex: 'name',
+      dataIndex: 'category_name',
       title: 'CATEGORY NAME',
       sortable: true,
       render: (name: string) => (
@@ -110,6 +90,7 @@ const CategoriesManagement = () => {
       align: 'right',
       render: (_: any, record: Category) => (
         <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          {/* Edit Button */}
           <IconButton
             size="sm"
             variant="plain"
@@ -122,17 +103,20 @@ const CategoriesManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteCategory(record);
-            }}
+
+          {/* ✅ Delete with PopConfirm */}
+          <PopConfirm
+            title="Delete Category"
+            description={`Are you sure you want to delete category "${record.category_name}"? This action cannot be undone.`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => deleteCategories({ ids: [Number(record.id)] })}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" onClick={e => e.stopPropagation()}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -190,7 +174,28 @@ const CategoriesManagement = () => {
         toolbar={{
           title: `Categories (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          // ✅ Bulk Delete with PopConfirm
+          onDelete: selectedKeys => {
+            if (!selectedKeys.length) return;
+          },
+          renderExtraActions: () =>
+            selectedCategoriesKeys.length > 0 && (
+              <PopConfirm
+                title="Delete Categories"
+                description={`Are you sure you want to delete ${selectedCategoriesKeys.length} selected categories? This action cannot be undone.`}
+                okText="Delete"
+                cancelText="Cancel"
+                placement="top"
+                onConfirm={() => {
+                  deleteCategories({ ids: selectedCategoriesKeys.map(key => Number(key)) });
+                  setSelectedCategoriesKeys([]);
+                }}
+              >
+                <Button size="sm" variant="soft" color="danger">
+                  Delete Selected
+                </Button>
+              </PopConfirm>
+            )
         }}
         pagination={{
           current: pagination?.current_page || 1,
@@ -221,6 +226,7 @@ const CategoriesManagement = () => {
         </div>
       )}
 
+      {/* Modal for Add/Edit */}
       <ManageCategory open={open} setOpen={setOpen} selected={selected} setSelected={setSelected} />
     </div>
   );

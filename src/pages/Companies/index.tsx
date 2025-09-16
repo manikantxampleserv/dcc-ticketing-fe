@@ -3,12 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { companiesFn, deleteCompanyFn } from 'services/Companies'; // 👈 Company APIs
+import { companiesFn, deleteCompanyFn } from 'services/Companies';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
-import ManageCompany from './ManageCompany'; // 👈 Company modal
-import { Company } from 'types/Companies'; // 👈 Company type
-import { ConfirmDialog } from 'components/ConfirmDialog'; // 👈 Added confirm dialog
-
+import ManageCompany from './ManageCompany';
+import { Company } from 'types/Companies';
+import PopConfirm from 'components/PopConfirm';
 const CompanyManagement = () => {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -16,8 +15,6 @@ const CompanyManagement = () => {
   const [selectedCompanyKeys, setSelectedCompanyKeys] = useState<React.Key[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [confirmOpen, setConfirmOpen] = useState(false); // 👈 dialog state
-  const [deleteIds, setDeleteIds] = useState<number[]>([]);
 
   const { data: companiesData, isLoading } = useQuery({
     queryKey: ['companies', currentPage, pageSize, search],
@@ -33,25 +30,14 @@ const CompanyManagement = () => {
   const pagination = companiesData?.pagination;
 
   const client = useQueryClient();
-  const { mutate: deleteCompanies, isPending: isDeleting } = useMutation({
+  const { mutateAsync: deleteCompanies, isPending: isDeleting } = useMutation({
     mutationFn: deleteCompanyFn,
     onSuccess: response => {
       toast.success(response.message);
-      setConfirmOpen(false);
       setSelected(null);
       client.refetchQueries({ queryKey: ['companies'] });
     }
   });
-
-  const handleDeleteCompany = (company: Company) => {
-    setDeleteIds([Number(company.id)]);
-    setConfirmOpen(true);
-  };
-
-  const handleDeleteSelected = (selectedKeys: React.Key[]) => {
-    setDeleteIds(selectedKeys.map(key => Number(key)));
-    setConfirmOpen(true);
-  };
 
   const columns: CustomTableColumn<Company>[] = [
     {
@@ -126,17 +112,25 @@ const CompanyManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteCompany(record);
-            }}
+
+          {/* ✅ PopConfirm wrapping delete button */}
+          <PopConfirm
+            title="Delete Company"
+            description="Are you sure you want to delete this company? This action cannot be undone."
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => deleteCompanies({ ids: [Number(record.id)] })}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton
+              size="sm"
+              variant="plain"
+              color="danger"
+              onClick={e => e.stopPropagation()} // सिर्फ row click रोकने के लिए
+            >
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -193,8 +187,7 @@ const CompanyManagement = () => {
         }}
         toolbar={{
           title: `Companies (${pagination?.total_count || 0})`,
-          showFilter: true,
-          onDelete: handleDeleteSelected
+          showFilter: true
         }}
         pagination={{
           current: pagination?.current_page || 1,
@@ -227,16 +220,6 @@ const CompanyManagement = () => {
 
       {/* Add / Edit Modal */}
       <ManageCompany open={open} setOpen={setOpen} selected={selected} setSelected={setSelected} />
-
-      {/* Delete Confirm Dialog */}
-      <ConfirmDialog
-        open={confirmOpen}
-        setOpen={setConfirmOpen}
-        title="Delete Company"
-        description="Are you sure you want to delete the selected company? This action cannot be undone."
-        loading={isDeleting}
-        onConfirm={() => deleteCompanies({ ids: deleteIds })}
-      />
     </div>
   );
 };

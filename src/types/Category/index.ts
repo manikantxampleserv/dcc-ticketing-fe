@@ -1,6 +1,6 @@
 export interface Category {
   id: number;
-  name: string; // 👈 Prisma field
+  category_name: string; // 👈 Prisma field
   description?: string | null;
   is_active?: boolean;
   created_at?: string; // Dates are usually strings when sent via API

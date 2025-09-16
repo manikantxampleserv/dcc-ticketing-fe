@@ -39,7 +39,7 @@ const ManageCategory: React.FC<{
   });
 
   const initialValues = {
-    name: selected?.name || '',
+    category_name: selected?.category_name || '',
     description: selected?.description || '', // 👈 Assuming categories have description
     is_active: selected?.is_active?.toString() || 'true',
     created_at: selected?.created_at || new Date().toISOString().split('T')[0]
@@ -52,13 +52,13 @@ const ManageCategory: React.FC<{
       if (isEdit) {
         updateCategory({
           id: selected?.id!,
-          name: values.name,
+          category_name: values.category_name,
           description: values.description,
           is_active: values.is_active === 'true'
         } as Category);
       } else {
         createCategory({
-          name: values.name,
+          category_name: values.category_name,
           description: values.description,
           is_active: values.is_active === 'true',
           created_at: values.created_at
@@ -84,8 +84,8 @@ const ManageCategory: React.FC<{
             <label className="text-sm font-medium">Category Name</label>
             <input
               type="text"
-              name="name"
-              value={formik.values.name}
+              name="category_name"
+              value={formik.values.category_name}
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2"
               placeholder="Enter category name"

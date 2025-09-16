@@ -123,3 +123,9 @@ export interface SkeletonRowProps {
   rowSelection?: boolean;
   size?: TableSize;
 }
+export interface TableToolbar {
+  title?: string;
+  showFilter?: boolean;
+  onDelete?: (selectedKeys: React.Key[]) => void;
+  renderExtraActions?: () => React.ReactNode;
+}

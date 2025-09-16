@@ -50,7 +50,7 @@ const ManageDepartment: React.FC<{
     onSubmit: values => {
       if (isEdit) {
         updateDepartment({
-          id: selected?.id!,
+          id: selected?.id,
           department_name: values.department_name,
           is_active: values.is_active === 'true'
         } as Department);

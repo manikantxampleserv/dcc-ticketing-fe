@@ -7,6 +7,7 @@ import { ticketsFn, deleteTicketFn } from 'services/Ticket';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageTicket from './ManageTicket';
 import { Ticket } from 'types/Tickets';
+import PopConfirm from 'components/PopConfirm'; // ✅ added
 
 const TicketManagement = () => {
   const [search, setSearch] = useState('');
@@ -30,7 +31,7 @@ const TicketManagement = () => {
   const pagination = ticketsData?.pagination;
 
   const client = useQueryClient();
-  const { mutate: deleteTickets } = useMutation({
+  const { mutate: deleteTickets, isLoading: deleting } = useMutation({
     mutationFn: deleteTicketFn,
     onSuccess: response => {
       toast.success(response.message);
@@ -40,16 +41,12 @@ const TicketManagement = () => {
   });
 
   const handleDeleteTicket = (ticket: Ticket) => {
-    if (window.confirm(`Delete ticket "${ticket.ticket_number}"?`)) {
-      deleteTickets({ ids: [Number(ticket.id)] });
-    }
+    deleteTickets({ ids: [Number(ticket.id)] });
   };
 
   const handleDeleteSelected = (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Delete ${selectedKeys.length} selected tickets?`)) {
-      deleteTickets({ ids: selectedKeys.map(key => Number(key)) });
-      setSelectedTicketsKeys([]);
-    }
+    deleteTickets({ ids: selectedKeys.map(key => Number(key)) });
+    setSelectedTicketsKeys([]);
   };
 
   const columns: CustomTableColumn<Ticket>[] = [
@@ -132,17 +129,20 @@ const TicketManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteTicket(record);
-            }}
+
+          {/* ✅ Delete with confirmation */}
+          <PopConfirm
+            title="Delete Ticket"
+            description={`Are you sure you want to delete ticket "${record.ticket_number}"? This action cannot be undone.`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => handleDeleteTicket(record)}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" loading={deleting}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -194,7 +194,22 @@ const TicketManagement = () => {
         toolbar={{
           title: `Tickets (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          onDelete: selectedTicketsKeys.length
+            ? () => (
+                <PopConfirm
+                  title="Delete Selected"
+                  description={`Are you sure you want to delete ${selectedTicketsKeys.length} selected tickets?`}
+                  okText="Delete"
+                  cancelText="Cancel"
+                  placement="top"
+                  onConfirm={() => handleDeleteSelected(selectedTicketsKeys)}
+                >
+                  <Button color="danger" size="sm" loading={deleting}>
+                    Delete Selected
+                  </Button>
+                </PopConfirm>
+              )
+            : undefined
         }}
         pagination={{
           current: pagination?.current_page || 1,
@@ -221,7 +236,7 @@ const TicketManagement = () => {
       )}
 
       {/* Drawer / Dialog for Create & Edit */}
-      <ManageTicket open={open} setOpen={setOpen} selected={selected} setSelected={setSelected} />
+      <ManageTicket open={open} setOpen={setOpen} ticket={selected} />
     </div>
   );
 };

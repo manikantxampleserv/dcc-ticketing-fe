@@ -7,6 +7,7 @@ import { departmentsFn, deleteDepartmentFn } from 'services/Department';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageDepartment from './ManageDepartment';
 import { Department } from 'types/Departments';
+import PopConfirm from 'components/PopConfirm'; // ✅ PopConfirm import
 
 const DepartmentsManagement = () => {
   const [search, setSearch] = useState('');
@@ -30,37 +31,16 @@ const DepartmentsManagement = () => {
   const pagination = departmentsData?.pagination;
 
   const client = useQueryClient();
-  const { mutate: deleteDepartments } = useMutation({
+  const { mutateAsync: deleteDepartments, isPending: isDeleting } = useMutation({
     mutationFn: deleteDepartmentFn,
     onSuccess: response => {
       toast.success(response.message);
-      setOpen(false);
       setSelected(null);
       client.refetchQueries({ queryKey: ['departments'] });
     }
   });
 
-  const handleDeleteDepartment = async (department: Department) => {
-    if (window.confirm(`Are you sure you want to delete department "${department.department_name}"?`)) {
-      try {
-        deleteDepartments({ ids: [Number(department.id)] });
-      } catch (error) {
-        console.error('Error deleting department:', error);
-      }
-    }
-  };
-
-  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected departments?`)) {
-      try {
-        deleteDepartments({ ids: selectedKeys.map(key => Number(key)) });
-        setSelectedDepartmentsKeys([]);
-      } catch (error) {
-        console.error('Error deleting selected departments:', error);
-      }
-    }
-  };
-
+  // ✅ Columns with PopConfirm in Delete Action
   const columns: CustomTableColumn<Department>[] = [
     {
       key: 'department_name',
@@ -100,6 +80,7 @@ const DepartmentsManagement = () => {
       align: 'right',
       render: (_: any, record: Department) => (
         <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          {/* Edit Button */}
           <IconButton
             size="sm"
             variant="plain"
@@ -112,17 +93,20 @@ const DepartmentsManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteDepartment(record);
-            }}
+
+          {/* ✅ Delete with PopConfirm */}
+          <PopConfirm
+            title="Delete Department"
+            description={`Are you sure you want to delete department "${record.department_name}"? This action cannot be undone.`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => deleteDepartments({ ids: [Number(record.id)] })}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" onClick={e => e.stopPropagation()}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -180,7 +164,28 @@ const DepartmentsManagement = () => {
         toolbar={{
           title: `Departments (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          // ✅ Bulk Delete with PopConfirm
+          onDelete: selectedKeys => {
+            if (!selectedKeys.length) return;
+          },
+          renderExtraActions: () =>
+            selectedDepartmentsKeys.length > 0 && (
+              <PopConfirm
+                title="Delete Departments"
+                description={`Are you sure you want to delete ${selectedDepartmentsKeys.length} selected departments? This action cannot be undone.`}
+                okText="Delete"
+                cancelText="Cancel"
+                placement="top"
+                onConfirm={() => {
+                  deleteDepartments({ ids: selectedDepartmentsKeys.map(key => Number(key)) });
+                  setSelectedDepartmentsKeys([]);
+                }}
+              >
+                <Button size="sm" variant="soft" color="danger">
+                  Delete Selected
+                </Button>
+              </PopConfirm>
+            )
         }}
         pagination={{
           current: pagination?.current_page || 1,
