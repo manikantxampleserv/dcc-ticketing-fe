@@ -73,18 +73,28 @@ const CustomersManagement = () => {
       key: 'customer',
       dataIndex: 'first_name',
       title: 'CUSTOMER',
-      width: 250,
+      width: 320,
       sortable: true,
       render: (_: any, record: Customer) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Avatar alt={`${record.first_name} ${record.last_name}`} size="md" sx={{ '--Avatar-size': '40px' }}>
             {record.first_name?.[0]?.toUpperCase() || 'U'}
           </Avatar>
-          <div>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <Typography level="body-sm" fontWeight="md" sx={{ textTransform: 'capitalize' }}>
               {`${record.first_name || ''} ${record.last_name || ''}`.trim()}
             </Typography>
-            <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
+            <Typography 
+              level="body-xs" 
+              sx={{ 
+                color: 'text.tertiary',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '240px'
+              }}
+              title={record.email}
+            >
               {record.email}
             </Typography>
           </div>
@@ -149,12 +159,10 @@ const CustomersManagement = () => {
     },
     {
       key: 'actions',
-      fixed: 'right',
       dataIndex: 'id',
       title: 'ACTIONS',
-      align: 'right',
       render: (_: any, record: Customer) => (
-        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+        <Stack direction="row" spacing={0.5}>
           <IconButton
             size="sm"
             variant="plain"

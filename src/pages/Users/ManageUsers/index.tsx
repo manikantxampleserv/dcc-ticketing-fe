@@ -4,7 +4,7 @@ import { useFormik } from 'formik';
 import React from 'react';
 import toast from 'react-hot-toast';
 // import { createUserFn, updateUserFn } from 'services/Users';
-import { createUserFn, updateUserFn } from 'services/users';
+import { createUserFn, updateUserFn } from 'services/Users';
 import CustomFilePicker from 'shared/CustomFilePicker';
 import CustomInput from 'shared/CustomInput';
 import CustomRadioInput from 'shared/CustomRadioInput';

@@ -37,7 +37,21 @@ const CustomTable = <T extends Record<string, any> = any>({
 
   const getRowKeyFn = React.useCallback((record: T, index: number) => getRowKey(record, index, rowKey), [rowKey]);
 
-  const filteredColumns = React.useMemo(() => getFilteredColumns(columns, visibleColumns), [columns, visibleColumns]);
+  const filteredColumns = React.useMemo(() => {
+    const filtered = getFilteredColumns(columns, visibleColumns);
+    // Apply smart defaults to columns
+    return filtered.map((column, index) => ({
+      ...column,
+      // Auto-set width for actions column if not specified
+      width: column.key === 'actions' && !column.width ? 140 : column.width,
+      // Auto-center align actions column if not specified
+      align: column.key === 'actions' && !column.align ? 'center' : column.align,
+      // Auto-enable ellipsis for long text columns if not specified
+      ellipsis: column.ellipsis !== false && !column.render && column.key !== 'actions' ? true : column.ellipsis,
+      // Add responsive priority (first and last columns are most important)
+      priority: column.priority || (index === 0 || column.key === 'actions' ? 'high' : 'medium')
+    }));
+  }, [columns, visibleColumns]);
 
   const { handleSelectAllClick, handleClick } = React.useMemo(
     () => createSelectionHandlers(selected, setSelected, dataSource, rowSelection, getRowKeyFn),
@@ -145,24 +159,48 @@ const CustomTable = <T extends Record<string, any> = any>({
           }
         >
           {rowSelection && (
-            <th scope="row">
-              <Checkbox
-                checked={isItemSelected}
-                disabled={checkboxProps.disabled}
-                slotProps={{
-                  input: {
-                    'aria-labelledby': labelId
-                  }
-                }}
-                sx={{ verticalAlign: 'top' }}
-              />
-            </th>
+            <td style={{ width: '40px', textAlign: 'center', padding: '12px 16px' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Checkbox
+                  checked={isItemSelected}
+                  disabled={checkboxProps.disabled}
+                  slotProps={{
+                    input: {
+                      'aria-labelledby': labelId
+                    }
+                  }}
+                  sx={{
+                    '& .MuiCheckbox-checkbox': {
+                      borderRadius: '4px'
+                    }
+                  }}
+                />
+              </Box>
+            </td>
           )}
 
           {filteredColumns.map((column, colIndex) => {
             const value = (row as any)[column.dataIndex];
-            const cellContent = column.render ? column.render(value, row, index) : value;
+            const cellContent = column.render ? column.render(value, row, index) : value ?? '-';
             const CellComponent = colIndex === 0 && !rowSelection ? 'th' : 'td';
+
+            // Auto-wrap actions in proper container
+            const finalContent =
+              column.key === 'actions' && column.render ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minWidth: '120px',
+                    flexWrap: 'nowrap'
+                  }}
+                >
+                  {column.render(value, row, index)}
+                </Box>
+              ) : (
+                cellContent
+              );
 
             return (
               <CellComponent
@@ -174,15 +212,21 @@ const CustomTable = <T extends Record<string, any> = any>({
                   })}
                 style={{
                   textAlign: column.align || 'left',
+                  width: column.width,
+                  minWidth: column.width ? Math.min(column.width, 120) : undefined,
+                  maxWidth: column.width,
                   ...(column.ellipsis && {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }),
+                  ...(column.key === 'actions' && {
                     whiteSpace: 'nowrap',
-                    maxWidth: column.width || '200px'
+                    overflow: 'visible'
                   })
                 }}
               >
-                {cellContent}
+                {finalContent}
               </CellComponent>
             );
           })}
@@ -218,7 +262,18 @@ const CustomTable = <T extends Record<string, any> = any>({
         />
       )}
 
-      <Box sx={{ flex: 1 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          maxHeight: '70vh',
+          width: '100%',
+          // Responsive table container
+          '@media (max-width: 768px)': {
+            maxHeight: '60vh'
+          }
+        }}
+      >
         <Table
           aria-labelledby="tableTitle"
           hoverRow={!loading}
@@ -226,7 +281,41 @@ const CustomTable = <T extends Record<string, any> = any>({
           sx={{
             '--TableCell-headBackground': 'transparent',
             '--TableCell-selectedBackground': theme => theme.vars.palette.success.softBg,
-            minWidth: '800px',
+            '--TableCell-paddingX': '16px',
+            '--TableCell-paddingY': '12px',
+            width: '100%',
+            minWidth: 'max-content',
+            tableLayout: 'auto',
+            // Responsive adjustments
+            '@media (max-width: 1200px)': {
+              '--TableCell-paddingX': '12px',
+              '--TableCell-paddingY': '8px'
+            },
+            '@media (max-width: 768px)': {
+              '--TableCell-paddingX': '8px',
+              '--TableCell-paddingY': '6px',
+              fontSize: '0.875rem'
+            },
+            '& thead': {
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+              backgroundColor: 'var(--joy-palette-background-surface)'
+            },
+            '& th, & td': {
+              padding: 'var(--TableCell-paddingY) var(--TableCell-paddingX)',
+              // Responsive text handling
+              '@media (max-width: 768px)': {
+                '&:not(:first-child):not(:last-child)': {
+                  display: 'none'
+                }
+              }
+            },
+            '& tbody tr': {
+              '&:hover': {
+                backgroundColor: 'var(--joy-palette-background-level1)'
+              }
+            },
             ...(rowSelection && {
               '& thead th:nth-child(1)': {
                 width: '40px'
