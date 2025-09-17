@@ -21,7 +21,7 @@ import DepartmentManagement from 'pages/Department';
 import RolesManagement from 'pages/Roles';
 import SystemSettingsManagement from 'pages/SystemSetting';
 import { ReactElement } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 interface RouteType {
   path: string;
@@ -191,7 +191,7 @@ const routes: RouteType[] = [
 
 const Routers = () => {
   return (
-    <BrowserRouter>
+   
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
@@ -226,9 +226,9 @@ const Routers = () => {
           />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
   );
 };
 
 export default Routers;
 export { routes };
+

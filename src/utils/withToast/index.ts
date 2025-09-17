@@ -28,7 +28,10 @@ const withToast = (fn: () => Promise<any>) => {
      * @param {string} error.response.data.message - The error message.
      * @returns {string} The error message.
      */
-    error: (error: { response: { data: { message: string } } }): string => error.response.data.message
+    error: (error: any): string =>
+      error?.response?.data?.message ||
+      error?.message ||
+      'An unexpected error occurred. Please try again.'
   };
 
   return toast.promise(fn(), toastOptions);

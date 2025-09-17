@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { AuthProvider } from './AuthContext';
 import { TicketProvider } from './TicketContext';
+import { BrowserRouter } from 'react-router-dom';
 
 const ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const queryClient = new QueryClient({
@@ -17,7 +19,11 @@ const ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) 
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TicketProvider>{children}</TicketProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <TicketProvider>{children}</TicketProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };
