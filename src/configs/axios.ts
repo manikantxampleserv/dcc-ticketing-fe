@@ -4,7 +4,7 @@ import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestCo
  * Base URL for API requests.
  * @type {string}
  */
-const baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://10.160.5.101:6000/api/v1/';
+const baseURL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1/';
 
 /**
  * Creates and configures an Axios instance with baseURL and request/response interceptors.
