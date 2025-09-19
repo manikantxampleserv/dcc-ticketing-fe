@@ -2,6 +2,7 @@
  * Service for interacting with companies API
  */
 import axiosInstance from 'configs/axios';
+import toast from 'react-hot-toast';
 import { Company } from 'types/Companies';
 
 /**
@@ -55,10 +56,24 @@ export const updateCompanyFn = async (body: Company) => {
 /**
  * Delete companies
  */
+// export const deleteCompanyFn = async (data: { ids: number[] }) => {
+//   try {
+//     const response = await axiosInstance.delete(`/company`, { data });
+//     return response.data;
+//   } catch (error) {
+//     throw error;
+//   }
+// };
+
 export const deleteCompanyFn = async (data: { ids: number[] }) => {
   try {
-    const response = await axiosInstance.delete(`/company`, { data });
-    return response.data;
+    if (data.ids.length >= 1) {
+      const response = await axiosInstance.delete(`/company/${data.ids[0]}`);
+      return response.data;
+    } else {
+      toast.error('Please delete companies one by one.');
+      throw new Error('Please delete companies one by one.');
+    }
   } catch (error) {
     throw error;
   }

@@ -1,85 +1,107 @@
-import React from 'react';
-import { Button, Box, Typography } from '@mui/joy';
-import { Trash2 } from 'lucide-react';
+import * as React from 'react';
+import { Box, IconButton, Tooltip, Typography } from '@mui/joy';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import PopConfirm from './PopConfirm';
-import toast from 'react-hot-toast';
+import { CustomTableColumn, EnhancedTableToolbarProps } from 'shared/CustomTable/types';
+import { ColumnFilter, SkeletonToolbar } from 'shared/CustomTable';
 
-const PopConfirmExample: React.FC = () => {
-  const handleDelete = async () => {
-    // Simulate API call with loading
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    toast.success('Task deleted successfully!');
-  };
+export const EnhancedTableToolbar = React.memo(
+  <T,>({
+    numSelected,
+    title = 'Data Table',
+    actions,
+    showColumnFilter = true,
+    onDelete,
+    columns,
+    visibleColumns,
+    onVisibilityChange,
+    loading
+  }: EnhancedTableToolbarProps<T>) => {
+    const hasSelection = numSelected > 0;
 
-  const handleQuickAction = async () => {
-    // Quick action
-    await new Promise(resolve => setTimeout(resolve, 500));
-    toast.success('Quick action completed!');
-  };
+    if (loading) {
+      return <SkeletonToolbar />;
+    }
 
-  const handleErrorAction = async () => {
-    // Simulate error
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    throw new Error('Something went wrong!');
-  };
+    const toolbarContent = React.useMemo(
+      () => (
+        <>
+          {hasSelection ? (
+            <Typography sx={{ flex: '1 1 100%' }} component="div">
+              {numSelected} selected
+            </Typography>
+          ) : (
+            <Typography level="body-lg" sx={{ flex: '1 1 100%' }} id="tableTitle" component="div">
+              {title}
+            </Typography>
+          )}
 
-  return (
-    <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-      <Typography level="h2" sx={{ mb: 2 }}>
-        PopConfirm with Promise Loader
-      </Typography>
+          {actions && <Box sx={{ mr: 1 }}>{actions}</Box>}
 
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <PopConfirm
-          title="Delete the task"
-          description="Are you sure to delete this task?"
-          onConfirm={handleDelete}
-          okText="Yes"
-          cancelText="No"
-          placement="top"
-        >
-          <Button color="danger" variant="outlined" startDecorator={<Trash2 size={16} />}>
-            Delete (2s loading)
-          </Button>
-        </PopConfirm>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {hasSelection && onDelete ? (
+              <PopConfirm
+                title="Delete items"
+                description={`Are you sure you want to delete ${numSelected} item(s)?`}
+                onConfirm={onDelete}
+                okText="Delete"
+                cancelText="Cancel"
+                placement="top"
+              >
+                <Tooltip title="Delete">
+                  <IconButton size="sm" color="danger" variant="solid">
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
+              </PopConfirm>
+            ) : (
+              showColumnFilter && (
+                <Tooltip title="Show/Hide Columns">
+                  <ColumnFilter
+                    columns={columns as CustomTableColumn[]}
+                    visibleColumns={visibleColumns}
+                    onVisibilityChange={onVisibilityChange}
+                  />
+                </Tooltip>
+              )
+            )}
+          </Box>
+        </>
+      ),
+      [
+        hasSelection,
+        numSelected,
+        title,
+        actions,
+        onDelete,
+        showColumnFilter,
+        columns,
+        visibleColumns,
+        onVisibilityChange
+      ]
+    );
 
-        <PopConfirm
-          title="Quick action"
-          description="This will complete quickly"
-          onConfirm={handleQuickAction}
-          okText="Confirm"
-          cancelText="Cancel"
-          placement="top"
-        >
-          <Button color="primary" variant="soft">
-            Quick Action (0.5s)
-          </Button>
-        </PopConfirm>
-
-        <PopConfirm
-          title="Error simulation"
-          description="This will fail and keep dialog open"
-          onConfirm={handleErrorAction}
-          okText="Try"
-          cancelText="Cancel"
-          placement="top"
-        >
-          <Button color="warning" variant="outlined">
-            Test Error
-          </Button>
-        </PopConfirm>
+    return (
+      <Box
+        sx={[
+          {
+            display: 'flex',
+            alignItems: 'center',
+            py: 1,
+            pl: { sm: 2 },
+            pr: { xs: 1, sm: 1 },
+            borderTopLeftRadius: 'var(--unstable_actionRadius)',
+            borderTopRightRadius: 'var(--unstable_actionRadius)'
+          },
+          hasSelection && {
+            bgcolor: 'background.level1'
+          }
+        ]}
+      >
+        {toolbarContent}
       </Box>
+    );
+  }
+);
 
-      <Typography level="body-sm" sx={{ color: 'text.secondary', textAlign: 'center', maxWidth: 500 }}>
-        Click any button to see the PopConfirm with promise loading states:
-        <br />
-        • Loading spinner appears on confirmation button
-        <br />
-        • Both buttons are disabled during loading
-        <br />• Dialog closes on success, stays open on error
-      </Typography>
-    </Box>
-  );
-};
-
-export default PopConfirmExample;
+EnhancedTableToolbar.displayName = 'EnhancedTableToolbar';

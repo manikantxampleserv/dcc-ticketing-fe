@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { deleteUserFn, usersFn } from 'services/Users';
+import { deleteUserFn, usersFn } from 'services/users';
 import { User } from 'types';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageUsers from './ManageUsers';

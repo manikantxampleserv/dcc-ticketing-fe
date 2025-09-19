@@ -4,6 +4,8 @@ import { Delete as DeleteIcon } from '@mui/icons-material';
 import { CustomTableColumn, EnhancedTableToolbarProps } from './types';
 import { ColumnFilter } from './ColumnFilter';
 import { SkeletonToolbar } from './skeleton';
+import toast from 'react-hot-toast';
+import PopConfirm from 'components/PopConfirm';
 
 export const EnhancedTableToolbar = React.memo(
   <T,>({
@@ -26,6 +28,7 @@ export const EnhancedTableToolbar = React.memo(
     const toolbarContent = React.useMemo(
       () => (
         <>
+          {/* Left Title / Selected Count */}
           {hasSelection ? (
             <Typography sx={{ flex: '1 1 100%' }} component="div">
               {numSelected} selected
@@ -36,16 +39,31 @@ export const EnhancedTableToolbar = React.memo(
             </Typography>
           )}
 
+          {/* Extra Actions */}
           {actions && <Box sx={{ mr: 1 }}>{actions}</Box>}
 
+          {/* Right Buttons */}
           <Box sx={{ display: 'flex', gap: 1 }}>
             {hasSelection
               ? onDelete && (
-                  <Tooltip title="Delete">
-                    <IconButton size="sm" color="danger" variant="solid" onClick={onDelete}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
+                  <PopConfirm
+                    title={`Delete ${numSelected} item(s)`}
+                    description={`Are you sure you want to delete ${numSelected} selected item(s)?`}
+                    okText="Delete"
+                    cancelText="Cancel"
+                    placement="top"
+                    onConfirm={() => {
+                      // Call your delete handler
+                      onDelete();
+                      toast.success(`${numSelected} item(s) deleted successfully!`);
+                    }}
+                  >
+                    <Tooltip title="Delete">
+                      <IconButton size="sm" color="danger" variant="solid">
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </PopConfirm>
                 )
               : showColumnFilter && (
                   <Tooltip title="Show/Hide Columns">
