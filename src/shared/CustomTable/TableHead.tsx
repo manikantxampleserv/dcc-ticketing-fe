@@ -84,21 +84,31 @@ export const EnhancedTableHead = React.memo(
       <thead>
         <tr>
           {rowSelection && (
-            <th>
+            <th style={{ width: '40px', textAlign: 'center', padding: '12px 16px' }}>
               {rowSelection.type !== 'radio' && !loading && (
-                <Checkbox
-                  indeterminate={numSelected > 0 && numSelected < rowCount}
-                  checked={rowCount > 0 && numSelected === rowCount}
-                  onChange={onSelectAllClick}
-                  slotProps={{
-                    input: {
-                      'aria-label': 'select all rows'
-                    }
-                  }}
-                  sx={{ verticalAlign: 'sub' }}
-                />
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <Checkbox
+                    indeterminate={numSelected > 0 && numSelected < rowCount}
+                    checked={rowCount > 0 && numSelected === rowCount}
+                    onChange={onSelectAllClick}
+                    slotProps={{
+                      input: {
+                        'aria-label': 'select all rows'
+                      }
+                    }}
+                    sx={{ 
+                      '& .MuiCheckbox-checkbox': {
+                        borderRadius: '4px'
+                      }
+                    }}
+                  />
+                </Box>
               )}
-              {loading && <Skeleton variant="rectangular" width={16} height={16} sx={{ borderRadius: '2px' }} />}
+              {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <Skeleton variant="rectangular" width={16} height={16} sx={{ borderRadius: '2px' }} />
+                </Box>
+              )}
             </th>
           )}
           {filteredColumns.map(column => (
@@ -106,11 +116,14 @@ export const EnhancedTableHead = React.memo(
               key={column.key}
               style={{
                 width: column.width,
+                minWidth: column.width,
+                maxWidth: column.width,
                 textAlign: column.align || 'left',
                 position: 'sticky',
                 top: 0,
                 backgroundColor: 'var(--joy-palette-background-surface)',
-                zIndex: 1
+                zIndex: 1,
+                whiteSpace: 'nowrap'
               }}
               aria-sort={
                 orderBy === column.dataIndex && column.sortable !== false && !loading

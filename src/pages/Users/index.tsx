@@ -3,11 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { deleteUserFn, usersFn } from 'services/users';
+import { deleteUserFn, usersFn } from 'services/Users';
 import { User } from 'types';
-import { CustomTable, CustomTableColumn } from '@manikantsharma/react-table';
+import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageUsers from './ManageUsers';
-import PopConfirm from 'components/PopConfirm'; // ✅ Added
+import PopConfirm from 'components/PopConfirm';
 
 const UserManagement = () => {
   const [search, setSearch] = useState('');
@@ -161,12 +161,10 @@ const UserManagement = () => {
     },
     {
       key: 'actions',
-      fixed: 'right',
       dataIndex: 'id',
       title: 'ACTIONS',
-      align: 'right',
       render: (_: any, record: User) => (
-        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+        <Stack direction="row" spacing={0.5}>
           <IconButton
             size="sm"
             variant="plain"
@@ -190,8 +188,6 @@ const UserManagement = () => {
           >
             {record.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
           </IconButton>
-
-          {/* ✅ Delete with PopConfirm */}
           <PopConfirm
             title="Delete User"
             description={`Are you sure you want to delete ${record.first_name} ${record.last_name}?`}
