@@ -8,6 +8,7 @@ import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageTicket from './ManageTicket';
 import { Ticket } from 'types/Tickets';
 import PopConfirm from 'components/PopConfirm'; // ✅ added
+import { Link } from 'react-router-dom';
 
 const TicketManagement = () => {
   const [search, setSearch] = useState('');
@@ -55,10 +56,11 @@ const TicketManagement = () => {
       dataIndex: 'ticket_number',
       title: 'TICKET NO',
       sortable: true,
-      render: (ticket_number: string) => (
-        <Typography level="body-sm" fontWeight="md">
+      render: (ticket_number: string,record:Ticket) => (
+       <Link to={`/tickets/${record?.id}`} ><Typography level="body-sm" fontWeight="md">
           {ticket_number}
         </Typography>
+        </Link> 
       )
     },
     {
