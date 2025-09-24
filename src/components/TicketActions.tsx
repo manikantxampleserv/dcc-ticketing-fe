@@ -109,10 +109,10 @@ export default function TicketActions({
               Merged ticket
             </div>
           )}
-          {ticket.attachments.length > 0 && (
+          {ticket?.attachments?.length > 0 && (
             <div className="flex items-center text-blue-600">
               <Paperclip className="h-4 w-4 mr-1" />
-              {ticket.attachments.length} attachment(s)
+              {ticket?.attachments?.length} attachment(s)
             </div>
           )}
         </div>
@@ -170,7 +170,7 @@ function AllocateModal({ ticket, onAllocate, onClose }: AllocateModalProps) {
       toast.error('Please select a user');
       return;
     }
-    onAllocate(ticket.id, selectedUserId, reason);
+    onAllocate(ticket?.id, selectedUserId, reason);
     onClose();
     toast.success('Ticket allocated successfully');
   };
@@ -242,7 +242,7 @@ function MergeModal({ ticket, availableTickets, onMerge, onClose }: MergeModalPr
       toast.error('Please select a ticket and provide a reason');
       return;
     }
-    onMerge(ticket.id, selectedTicketId, reason);
+    onMerge(ticket?.id, selectedTicketId, reason);
     onClose();
     toast.success('Tickets merged successfully');
   };
@@ -323,7 +323,7 @@ function ReopenModal({ ticket, onReopen, onClose }: ReopenModalProps) {
       toast.error('Please provide a reason for reopening');
       return;
     }
-    onReopen(ticket.id, reason);
+    onReopen(ticket?.id, reason);
     onClose();
     toast.success('Ticket reopened successfully');
   };
@@ -427,7 +427,7 @@ function AttachmentModal({ ticket, onAddAttachment, onClose }: AttachmentModalPr
       toast.error('Please select a file');
       return;
     }
-    onAddAttachment(ticket.id, selectedFile, isPublic);
+    onAddAttachment(ticket?.id, selectedFile, isPublic);
     onClose();
     toast.success('Attachment added successfully');
   };

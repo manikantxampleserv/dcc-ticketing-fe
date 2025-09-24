@@ -26,6 +26,23 @@ export interface Ticket {
   tags?: string | null;
   created_at: string;
   updated_at: string;
+  ticket_id: number;
+  comment_text: string;
+}
+
+export interface TicketComment {
+  ticket_id: number;
+  comment_text: string;
+  is_internal: boolean;
+  attachments?: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: number;
+  id: number;
+  customer_id: number;
+  comment_type: string;
+  email_message_id: string;
+  attachment_urls?: string | null;
 }
 
 // ✅ sirf create ke liye
