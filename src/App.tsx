@@ -1,6 +1,8 @@
 import { Toaster } from 'react-hot-toast';
 import ContextProvider from 'context';
 import Routers from 'routes';
+import 'react-quill/dist/quill.snow.css';
+import 'quill-mention';
 
 function App() {
   return (

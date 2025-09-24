@@ -3,10 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { departmentsFn, deleteDepartmentFn } from 'services/Department';
+import { departmentsFn, deleteDepartmentsFn } from 'services/Department';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageDepartment from './ManageDepartment';
 import { Department } from 'types/Departments';
+import PopConfirm from 'components/PopConfirm';
 
 const DepartmentsManagement = () => {
   const [search, setSearch] = useState('');
@@ -30,37 +31,20 @@ const DepartmentsManagement = () => {
   const pagination = departmentsData?.pagination;
 
   const client = useQueryClient();
-  const { mutate: deleteDepartments } = useMutation({
-    mutationFn: deleteDepartmentFn,
+  const { mutate: deleteDepartment } = useMutation({
+    mutationFn: deleteDepartmentsFn,
     onSuccess: response => {
       toast.success(response.message);
       setOpen(false);
       setSelected(null);
       client.refetchQueries({ queryKey: ['departments'] });
+    },
+    onError: () => {
+      toast.error('Failed to delete department');
     }
   });
 
-  const handleDeleteDepartment = async (department: Department) => {
-    if (window.confirm(`Are you sure you want to delete department "${department.department_name}"?`)) {
-      try {
-        deleteDepartments({ ids: [Number(department.id)] });
-      } catch (error) {
-        console.error('Error deleting department:', error);
-      }
-    }
-  };
-
-  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected departments?`)) {
-      try {
-        deleteDepartments({ ids: selectedKeys.map(key => Number(key)) });
-        setSelectedDepartmentsKeys([]);
-      } catch (error) {
-        console.error('Error deleting selected departments:', error);
-      }
-    }
-  };
-
+  // ✅ Columns
   const columns: CustomTableColumn<Department>[] = [
     {
       key: 'department_name',
@@ -100,6 +84,7 @@ const DepartmentsManagement = () => {
       align: 'right',
       render: (_: any, record: Department) => (
         <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          {/* Edit */}
           <IconButton
             size="sm"
             variant="plain"
@@ -112,17 +97,20 @@ const DepartmentsManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteDepartment(record);
-            }}
+
+          {/* Delete */}
+          <PopConfirm
+            title="Delete Department"
+            description={`Are you sure you want to delete department "${record.department_name}"?`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => deleteDepartment(Number(record.id))}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" onClick={e => e.stopPropagation()}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -180,7 +168,14 @@ const DepartmentsManagement = () => {
         toolbar={{
           title: `Departments (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          // ✅ Bulk Delete with confirm
+          onDelete: selectedKeys => {
+            if (!selectedKeys.length) return;
+            if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} departments?`)) {
+              selectedKeys.forEach(key => deleteDepartment(Number(key)));
+              setSelectedDepartmentsKeys([]);
+            }
+          }
         }}
         pagination={{
           current: pagination?.current_page || 1,

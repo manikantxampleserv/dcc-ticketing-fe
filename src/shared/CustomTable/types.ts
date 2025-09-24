@@ -9,7 +9,7 @@ export interface CustomTableColumn<T = any> {
   key: string;
   dataIndex: keyof T;
   title: string;
-  width?: string | number;
+  width?: number;
   align?: TableAlign;
   sortable?: boolean;
   render?: (value: any, record: T, index: number) => React.ReactNode;
@@ -19,6 +19,7 @@ export interface CustomTableColumn<T = any> {
   fixed?: 'left' | 'right';
   ellipsis?: boolean;
   hidden?: boolean;
+  priority?: 'high' | 'medium' | 'low';
 }
 
 export interface TablePagination {
@@ -44,6 +45,7 @@ export interface TableToolbar {
   showFilter?: boolean;
   showColumnFilter?: boolean;
   onDelete?: (selectedKeys: React.Key[]) => void;
+  renderExtraActions?: () => React.ReactNode;
 }
 
 export interface TableRowProps {

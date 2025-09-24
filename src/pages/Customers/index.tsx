@@ -7,6 +7,7 @@ import { customersFn, deleteCustomerFn } from 'services/Customers';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import { Customer } from 'types/Customers';
 import ManageCustomers from './ManageCustomers';
+import PopConfirm from 'components/PopConfirm';
 
 const CustomersManagement = () => {
   const [search, setSearch] = useState('');
@@ -29,15 +30,8 @@ const CustomersManagement = () => {
   const customers = customersData?.data || [];
   const pagination = customersData?.pagination;
 
-  const handleToggleCustomerStatus = async (user: Customer) => {
-    try {
-      console.log('Toggle status for user:', user.id);
-    } catch (error) {
-      console.error('Error toggling user status:', error);
-    }
-  };
   const client = useQueryClient();
-  const { mutate: deleteCustomers } = useMutation({
+  const { mutate: deleteCustomers, isPending: deleting } = useMutation({
     mutationFn: deleteCustomerFn,
     onSuccess: response => {
       toast.success(response.message);
@@ -47,24 +41,20 @@ const CustomersManagement = () => {
     }
   });
 
-  const handleDeleteCustomer = async (user: Customer) => {
-    if (window.confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
-      try {
-        deleteCustomers({ ids: [Number(user.id)] });
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
-    }
+  const handleDeleteCustomer = (user: Customer) => {
+    deleteCustomers({ ids: [Number(user.id)] });
   };
 
-  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected users?`)) {
-      try {
-        deleteCustomers({ ids: selectedKeys.map(key => Number(key)) });
-        setSelectedCustomersKeys([]);
-      } catch (error) {
-        console.error('Error deleting selected users:', error);
-      }
+  const handleDeleteSelected = (selectedKeys: React.Key[]) => {
+    deleteCustomers({ ids: selectedKeys.map(key => Number(key)) });
+    setSelectedCustomersKeys([]);
+  };
+
+  const handleToggleCustomerStatus = async (user: Customer) => {
+    try {
+      console.log('Toggle status for customer:', user.id);
+    } catch (error) {
+      console.error('Error toggling customer status:', error);
     }
   };
 
@@ -73,18 +63,28 @@ const CustomersManagement = () => {
       key: 'customer',
       dataIndex: 'first_name',
       title: 'CUSTOMER',
-      width: 250,
+      width: 320,
       sortable: true,
       render: (_: any, record: Customer) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Avatar alt={`${record.first_name} ${record.last_name}`} size="md" sx={{ '--Avatar-size': '40px' }}>
             {record.first_name?.[0]?.toUpperCase() || 'U'}
           </Avatar>
-          <div>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <Typography level="body-sm" fontWeight="md" sx={{ textTransform: 'capitalize' }}>
               {`${record.first_name || ''} ${record.last_name || ''}`.trim()}
             </Typography>
-            <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
+            <Typography
+              level="body-xs"
+              sx={{
+                color: 'text.tertiary',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '240px'
+              }}
+              title={record.email}
+            >
               {record.email}
             </Typography>
           </div>
@@ -149,12 +149,10 @@ const CustomersManagement = () => {
     },
     {
       key: 'actions',
-      fixed: 'right',
       dataIndex: 'id',
       title: 'ACTIONS',
-      align: 'right',
       render: (_: any, record: Customer) => (
-        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+        <Stack direction="row" spacing={0.5}>
           <IconButton
             size="sm"
             variant="plain"
@@ -178,28 +176,30 @@ const CustomersManagement = () => {
           >
             {record.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteCustomer(record);
-            }}
+          <PopConfirm
+            title="Delete Customer"
+            description={`Are you sure you want to delete ${record.first_name} ${record.last_name}?`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => handleDeleteCustomer(record)}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" loading={deleting}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
   ];
+
   return (
     <div className="space-y-3">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
-          <p className="text-gray-600">Manage system users and their permissions</p>
+          <p className="text-gray-600">Manage system customers and their details</p>
         </div>
         <Button
           onClick={() => {
@@ -216,7 +216,6 @@ const CustomersManagement = () => {
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex justify-between items-center">
-          {/* Search */}
           <div className="flex items-center gap-3">
             <Input
               type="text"
@@ -230,7 +229,7 @@ const CustomersManagement = () => {
         </div>
       </div>
 
-      {/* Customers Table using CustomTable */}
+      {/* Customers Table */}
       <CustomTable
         columns={columns}
         dataSource={customers}
@@ -239,9 +238,7 @@ const CustomersManagement = () => {
         rowSelection={{
           type: 'checkbox',
           selectedRowKeys: selectedCustomersKeys,
-          onChange: selectedKeys => {
-            setSelectedCustomersKeys(selectedKeys);
-          },
+          onChange: selectedKeys => setSelectedCustomersKeys(selectedKeys),
           getCheckboxProps: record => ({
             disabled: record.is_active === true && Number(record.id) === 1
           })
@@ -249,25 +246,36 @@ const CustomersManagement = () => {
         toolbar={{
           title: `Customers (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          onDelete:
+            selectedCustomersKeys.length > 0
+              ? () => (
+                  <PopConfirm
+                    title="Delete Selected Customers"
+                    description={`Are you sure you want to delete ${selectedCustomersKeys.length} selected customers?`}
+                    okText="Delete"
+                    cancelText="Cancel"
+                    placement="top"
+                    onConfirm={() => handleDeleteSelected(selectedCustomersKeys)}
+                  >
+                    <Button color="danger" size="sm" loading={deleting}>
+                      Delete Selected
+                    </Button>
+                  </PopConfirm>
+                )
+              : undefined
         }}
         pagination={{
           current: pagination?.current_page || 1,
           pageSize: pageSize,
           total: pagination?.total_count || 0,
           showSizeChanger: true,
-          pageSizeOptions: [5, 10, 15, 20, 25, 30, 35, 40, 45, 50],
+          pageSizeOptions: [5, 10, 15, 20, 25, 30],
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);
           }
         }}
         size="md"
-        onRow={record => ({
-          onClick: () => {
-            console.log('Row clicked:', record);
-          }
-        })}
       />
 
       {/* Empty State */}

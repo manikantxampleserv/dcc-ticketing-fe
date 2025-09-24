@@ -1,12 +1,47 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Ticket, Clock, CheckCircle, AlertTriangle, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
-import { useTickets } from '../context/TicketContext';
 import { formatDistanceToNow } from 'date-fns';
+import { dashboardFn, DashboardStats, Ticket as TicketType } from '../services/Dashboard';
+import { toast } from 'react-hot-toast';
 
 const Dashboard: React.FC = () => {
-  const { state } = useTickets();
-  const { stats, tickets } = state;
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const didFetch = useRef(false);
+
+  useEffect(() => {
+    if (didFetch.current) return;
+    didFetch.current = true;
+
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardFn();
+        setStats(data.stats);
+        setTickets(data.tickets);
+      } catch (error) {
+        toast.error('Failed to load dashboard data!');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[70vh]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return <p className="text-center text-red-500">No data available</p>;
+  }
 
   const recentTickets = tickets
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -19,28 +54,28 @@ const Dashboard: React.FC = () => {
   const statCards = [
     {
       title: 'Total Tickets',
-      value: stats.total_tickets || 0,
+      value: stats.totalTickets,
       icon: Ticket,
       color: 'bg-blue-500',
       change: '+12%'
     },
     {
       title: 'Open Tickets',
-      value: stats.open_tickets || 0,
+      value: stats.openTickets,
       icon: Clock,
       color: 'bg-orange-500',
       change: '-5%'
     },
     {
       title: 'Resolved Today',
-      value: stats.resolved_tickets || 0,
+      value: stats.resolvedToday,
       icon: CheckCircle,
       color: 'bg-green-500',
       change: '+8%'
     },
     {
       title: 'SLA Breached',
-      value: stats.sla_breached || 0,
+      value: stats.sla_breached,
       icon: AlertTriangle,
       color: 'bg-red-500',
       change: '-15%'
@@ -56,7 +91,7 @@ const Dashboard: React.FC = () => {
           <p className="text-gray-600">Welcome back! Here's what's happening with your support tickets.</p>
         </div>
         <Link
-          to="/tickets"
+          to="/ticket"
           className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center"
         >
           View All Tickets
@@ -89,56 +124,60 @@ const Dashboard: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-900">Recent Tickets</h2>
           </div>
           <div className="divide-y divide-gray-200">
-            {recentTickets.map(ticket => (
-              <Link
-                key={ticket.id}
-                to={`/tickets/${ticket.id}`}
-                className="block p-6 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium text-gray-900">{ticket.ticket_number}</span>
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          ticket.priority === 'high'
-                            ? 'priority-high'
-                            : ticket.priority === 'medium'
-                            ? 'priority-medium'
-                            : 'priority-low'
-                        }`}
-                      >
-                        {ticket.priority}
-                      </span>
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          ticket.status === 'open'
-                            ? 'status-open'
-                            : ticket.status === 'in-progress'
-                            ? 'status-in-progress'
-                            : ticket.status === 'resolved'
-                            ? 'status-resolved'
-                            : 'status-closed'
-                        }`}
-                      >
-                        {ticket.status.replace('-', ' ')}
-                      </span>
+            {recentTickets.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No tickets available</p>
+            ) : (
+              recentTickets.map(ticket => (
+                <Link
+                  key={ticket.id}
+                  to={`/tickets/${ticket.id}`}
+                  className="block p-6 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-sm font-medium text-gray-900">{ticket.ticket_number}</span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            ticket.priority === 'high'
+                              ? 'priority-high'
+                              : ticket.priority === 'medium'
+                              ? 'priority-medium'
+                              : 'priority-low'
+                          }`}
+                        >
+                          {ticket.priority}
+                        </span>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            ticket.status === 'open'
+                              ? 'status-open'
+                              : ticket.status === 'in-progress'
+                              ? 'status-in-progress'
+                              : ticket.status === 'resolved'
+                              ? 'status-resolved'
+                              : 'status-closed'
+                          }`}
+                        >
+                          {ticket.status.replace('-', ' ')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-900 mt-1 font-medium">{ticket.subject}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {ticket.customer_name} • {ticket.customer_company}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-900 mt-1 font-medium">{ticket.subject}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {ticket.customer_name} • {ticket.customer_company}
-                    </p>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">
+                        {formatDistanceToNow(new Date(ticket.created_at), {
+                          addSuffix: true
+                        })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">
-                      {formatDistanceToNow(new Date(ticket.created_at), {
-                        addSuffix: true
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            )}
           </div>
         </div>
 

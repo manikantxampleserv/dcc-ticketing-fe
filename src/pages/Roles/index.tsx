@@ -7,6 +7,8 @@ import { rolesFn, deleteRoleFn } from 'services/Roles';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageRole from './ManageRole';
 import { Role } from 'types/Roles';
+import PopConfirm from 'components/PopConfirm'; // ✅ Import PopConfirm
+
 const RolesManagement = () => {
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -39,27 +41,7 @@ const RolesManagement = () => {
     }
   });
 
-  const handleDeleteRole = async (role: Role) => {
-    if (window.confirm(`Are you sure you want to delete role "${role.name}"?`)) {
-      try {
-        deleteRoles({ ids: [Number(role.id)] });
-      } catch (error) {
-        console.error('Error deleting role:', error);
-      }
-    }
-  };
-
-  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected roles?`)) {
-      try {
-        deleteRoles({ ids: selectedKeys.map(key => Number(key)) });
-        setSelectedRolesKeys([]);
-      } catch (error) {
-        console.error('Error deleting selected roles:', error);
-      }
-    }
-  };
-
+  // ✅ Columns with PopConfirm in Delete Action
   const columns: CustomTableColumn<Role>[] = [
     {
       key: 'name',
@@ -99,6 +81,7 @@ const RolesManagement = () => {
       align: 'right',
       render: (_: any, record: Role) => (
         <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+          {/* Edit Button */}
           <IconButton
             size="sm"
             variant="plain"
@@ -111,17 +94,20 @@ const RolesManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteRole(record);
-            }}
+
+          {/* ✅ Delete with PopConfirm */}
+          <PopConfirm
+            title="Delete Role"
+            description={`Are you sure you want to delete role "${record.name}"? This action cannot be undone.`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => deleteRoles({ ids: [Number(record.id)] })}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" onClick={e => e.stopPropagation()}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -179,7 +165,14 @@ const RolesManagement = () => {
         toolbar={{
           title: `Roles (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          // ✅ Bulk Delete with PopConfirm
+          onDelete: selectedKeys => {
+            if (!selectedKeys.length) return;
+            if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} roles?`)) {
+              deleteRoles({ ids: selectedKeys.map(key => Number(key)) });
+              setSelectedRolesKeys([]);
+            }
+          }
         }}
         pagination={{
           current: pagination?.current_page || 1,

@@ -2,7 +2,8 @@
  * Service for interacting with tickets API
  */
 import axiosInstance from 'configs/axios';
-import { Ticket } from 'types/Tickets';
+import { Ticket, TicketComment } from 'types/Tickets';
+import withToast from 'utils/withToast';
 
 /**
  * Fetch tickets list
@@ -26,9 +27,10 @@ export const ticketsFn = async (params: { page?: number; limit?: number; search?
  * @param {number} id - ticket id
  * @returns {Promise<Ticket>} - response data
  */
-export const ticketFn = async (id: number): Promise<Ticket> => {
+export const ticketFn = async (id: number): Promise<any> => {
   try {
     const response = await axiosInstance.get(`/ticket/${id}`);
+    console.log(response.data);
     return response.data;
   } catch (error) {
     throw error;
@@ -48,13 +50,21 @@ export const createTicketFn = async (body: Ticket) => {
     throw error;
   }
 };
+export const createCommentFn = async (body: any) => {
+  try {
+    const response = await withToast(() => axiosInstance.post('/ticket-comment', body));
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 /**
  * Update ticket
  * @param {Ticket} body - ticket data
  * @returns {Promise<Ticket>} - response data
  */
-export const updateTicketFn = async (body: Ticket) => {
+export const updateTicketFn = async (id: number, body: Ticket) => {
   try {
     const response = await axiosInstance.put(`/ticket/${body.id}`, body);
     return response.data;

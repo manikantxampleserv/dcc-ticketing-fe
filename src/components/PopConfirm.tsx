@@ -29,6 +29,8 @@ const PopConfirm: React.FC<PopConfirmProps> = ({
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [actualPlacement, setActualPlacement] = useState<'top' | 'bottom'>('top');
+  const [arrowOffset, setArrowOffset] = useState(0);
   const anchorRef = useRef<HTMLElement>(null);
 
   const calculatePosition = () => {
@@ -38,17 +40,65 @@ const PopConfirm: React.FC<PopConfirmProps> = ({
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
+    // Popup dimensions (approximate)
+    const popupWidth = 300;
+    const popupHeight = 120;
+    const margin = 16; // Safe margin from screen edges
+
     let top = 0;
     let left = 0;
+    const triggerCenterX = rect.left + scrollLeft + rect.width / 2;
 
     if (placement === 'top') {
       top = rect.top + scrollTop - 12;
-      left = rect.left + scrollLeft + rect.width / 2;
+      left = triggerCenterX;
     } else {
       top = rect.bottom + scrollTop + 12;
-      left = rect.left + scrollLeft + rect.width / 2;
+      left = triggerCenterX;
     }
 
+    // Check horizontal boundaries and adjust
+    const viewportWidth = window.innerWidth;
+    const leftEdge = left - popupWidth / 2;
+    const rightEdge = left + popupWidth / 2;
+
+    let adjustedLeft = left;
+    let arrowOffsetValue = 0;
+
+    if (leftEdge < margin) {
+      // Too close to left edge
+      adjustedLeft = margin + popupWidth / 2;
+      arrowOffsetValue = left - adjustedLeft; // How much we shifted
+    } else if (rightEdge > viewportWidth - margin) {
+      // Too close to right edge
+      adjustedLeft = viewportWidth - margin - popupWidth / 2;
+      arrowOffsetValue = left - adjustedLeft; // How much we shifted
+    }
+
+    left = adjustedLeft;
+
+    // Check vertical boundaries and adjust
+    const viewportHeight = window.innerHeight;
+    let finalPlacement = placement;
+
+    if (placement === 'top') {
+      const topEdge = top - popupHeight;
+      if (topEdge < scrollTop + margin) {
+        // Not enough space above, switch to bottom
+        top = rect.bottom + scrollTop + 12;
+        finalPlacement = 'bottom';
+      }
+    } else {
+      const bottomEdge = top + popupHeight;
+      if (bottomEdge > scrollTop + viewportHeight - margin) {
+        // Not enough space below, switch to top
+        top = rect.top + scrollTop - 12;
+        finalPlacement = 'top';
+      }
+    }
+
+    setActualPlacement(finalPlacement);
+    setArrowOffset(arrowOffsetValue);
     setPosition({ top, left });
   };
 
@@ -134,7 +184,7 @@ const PopConfirm: React.FC<PopConfirmProps> = ({
               position: 'absolute',
               top: position.top,
               left: position.left,
-              transform: placement === 'top' ? 'translate(-50%, -100%)' : 'translateX(-50%)',
+              transform: actualPlacement === 'top' ? 'translate(-50%, -100%)' : 'translateX(-50%)',
               minWidth: 280,
               maxWidth: 320,
               p: 2.5,
@@ -148,26 +198,27 @@ const PopConfirm: React.FC<PopConfirmProps> = ({
               '@keyframes fadeIn': {
                 from: {
                   opacity: 0,
-                  transform: placement === 'top' ? 'translate(-50%, -100%) scale(0.95)' : 'translateX(-50%) scale(0.95)'
+                  transform:
+                    actualPlacement === 'top' ? 'translate(-50%, -100%) scale(0.95)' : 'translateX(-50%) scale(0.95)'
                 },
                 to: {
                   opacity: 1,
-                  transform: placement === 'top' ? 'translate(-50%, -100%) scale(1)' : 'translateX(-50%) scale(1)'
+                  transform: actualPlacement === 'top' ? 'translate(-50%, -100%) scale(1)' : 'translateX(-50%) scale(1)'
                 }
               },
               '&::after': {
                 content: '""',
                 position: 'absolute',
-                bottom: placement === 'top' ? -8 : 'unset',
-                top: placement === 'bottom' ? -8 : 'unset',
-                left: '50%',
+                bottom: actualPlacement === 'top' ? -8 : 'unset',
+                top: actualPlacement === 'bottom' ? -8 : 'unset',
+                left: `calc(50% + ${arrowOffset}px)`,
                 transform: 'translateX(-50%)',
                 width: 0,
                 height: 0,
                 borderLeft: '8px solid transparent',
                 borderRight: '8px solid transparent',
-                borderTop: placement === 'top' ? '8px solid white' : 'none',
-                borderBottom: placement === 'bottom' ? '8px solid white' : 'none',
+                borderTop: actualPlacement === 'top' ? '8px solid white' : 'none',
+                borderBottom: actualPlacement === 'bottom' ? '8px solid white' : 'none',
                 filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
               }
             }}

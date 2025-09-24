@@ -3,11 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-// import { deleteUserFn, usersFn } from './services/Users';
 import { deleteUserFn, usersFn } from 'services/users';
 import { User } from 'types';
-import { CustomTable, CustomTableColumn } from '@manikantsharma/react-table';
+import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
 import ManageUsers from './ManageUsers';
+import PopConfirm from 'components/PopConfirm';
 
 const UserManagement = () => {
   const [search, setSearch] = useState('');
@@ -47,15 +47,8 @@ const UserManagement = () => {
     }
   };
 
-  const handleToggleUserStatus = async (user: User) => {
-    try {
-      console.log('Toggle status for user:', user.id);
-    } catch (error) {
-      console.error('Error toggling user status:', error);
-    }
-  };
   const client = useQueryClient();
-  const { mutate: deleteUser } = useMutation({
+  const { mutate: deleteUser, isPending: deleting } = useMutation({
     mutationFn: deleteUserFn,
     onSuccess: response => {
       toast.success(response.message);
@@ -65,24 +58,20 @@ const UserManagement = () => {
     }
   });
 
-  const handleDeleteUser = async (user: User) => {
-    if (window.confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
-      try {
-        deleteUser({ ids: [Number(user.id)] });
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
-    }
+  const handleDeleteUser = (user: User) => {
+    deleteUser({ ids: [Number(user.id)] });
   };
 
-  const handleDeleteSelected = async (selectedKeys: React.Key[]) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedKeys.length} selected users?`)) {
-      try {
-        deleteUser({ ids: selectedKeys.map(key => Number(key)) });
-        setSelectedUserKeys([]);
-      } catch (error) {
-        console.error('Error deleting selected users:', error);
-      }
+  const handleDeleteSelected = (selectedKeys: React.Key[]) => {
+    deleteUser({ ids: selectedKeys.map(key => Number(key)) });
+    setSelectedUserKeys([]);
+  };
+
+  const handleToggleUserStatus = async (user: User) => {
+    try {
+      console.log('Toggle status for user:', user.id);
+    } catch (error) {
+      console.error('Error toggling user status:', error);
     }
   };
 
@@ -172,12 +161,10 @@ const UserManagement = () => {
     },
     {
       key: 'actions',
-      fixed: 'right',
       dataIndex: 'id',
       title: 'ACTIONS',
-      align: 'right',
       render: (_: any, record: User) => (
-        <Stack direction="row" spacing={0.5} sx={{ justifyContent: 'flex-end' }}>
+        <Stack direction="row" spacing={0.5}>
           <IconButton
             size="sm"
             variant="plain"
@@ -201,17 +188,18 @@ const UserManagement = () => {
           >
             {record.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="danger"
-            onClick={e => {
-              e.stopPropagation();
-              handleDeleteUser(record);
-            }}
+          <PopConfirm
+            title="Delete User"
+            description={`Are you sure you want to delete ${record.first_name} ${record.last_name}?`}
+            okText="Delete"
+            cancelText="Cancel"
+            placement="top"
+            onConfirm={() => handleDeleteUser(record)}
           >
-            <Trash2 size={16} />
-          </IconButton>
+            <IconButton size="sm" variant="plain" color="danger" loading={deleting}>
+              <Trash2 size={16} />
+            </IconButton>
+          </PopConfirm>
         </Stack>
       )
     }
@@ -240,7 +228,7 @@ const UserManagement = () => {
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex justify-between items-center">
-          {/* Search */}
+          {/* Search + Role Filter */}
           <div className="flex items-center gap-3">
             <Input
               type="text"
@@ -250,8 +238,6 @@ const UserManagement = () => {
               startDecorator={<Search size={16} />}
               sx={{ width: '320px' }}
             />
-
-            {/* Role Filter */}
             <Select
               value={roleFilter}
               onChange={(_, value) => setRoleFilter(value || 'all')}
@@ -267,7 +253,7 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {/* Users Table using CustomTable */}
+      {/* Users Table */}
       <CustomTable
         columns={columns}
         dataSource={users}
@@ -276,9 +262,7 @@ const UserManagement = () => {
         rowSelection={{
           type: 'checkbox',
           selectedRowKeys: selectedUserKeys,
-          onChange: selectedKeys => {
-            setSelectedUserKeys(selectedKeys);
-          },
+          onChange: selectedKeys => setSelectedUserKeys(selectedKeys),
           getCheckboxProps: record => ({
             disabled: record.user_role?.name?.toLowerCase() === 'admin'
           })
@@ -286,7 +270,23 @@ const UserManagement = () => {
         toolbar={{
           title: `Users (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete: handleDeleteSelected
+          onDelete:
+            selectedUserKeys.length > 0
+              ? () => (
+                  <PopConfirm
+                    title="Delete Selected Users"
+                    description={`Are you sure you want to delete ${selectedUserKeys.length} selected users?`}
+                    okText="Delete"
+                    cancelText="Cancel"
+                    placement="top"
+                    onConfirm={() => handleDeleteSelected(selectedUserKeys)}
+                  >
+                    <Button color="danger" size="sm" loading={deleting}>
+                      Delete Selected
+                    </Button>
+                  </PopConfirm>
+                )
+              : undefined
         }}
         pagination={{
           current: pagination?.current_page || 1,
@@ -300,11 +300,6 @@ const UserManagement = () => {
           }
         }}
         size="md"
-        onRow={record => ({
-          onClick: () => {
-            console.log('Row clicked:', record);
-          }
-        })}
       />
 
       {/* Empty State */}

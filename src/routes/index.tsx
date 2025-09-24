@@ -10,7 +10,7 @@ import Login from 'pages/Login';
 import Settings from 'pages/Settings';
 import UserProfile from 'pages/UserProfile';
 import UserManagement from 'pages/Users';
-// import TicketDetail from 'pages/TicketDetail';
+import TicketDetail from 'pages/TicketDetail';
 // import Tickets from 'pages/Tickets';
 import TicketManagement from 'pages/Ticket';
 // import TicketManagement from 'pages/Ticket';
@@ -21,7 +21,7 @@ import DepartmentManagement from 'pages/Department';
 import RolesManagement from 'pages/Roles';
 import SystemSettingsManagement from 'pages/SystemSetting';
 import { ReactElement } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 interface RouteType {
   path: string;
@@ -94,14 +94,14 @@ const routes: RouteType[] = [
     icon: 'Building2'
   },
 
-  // {
-  //   path: '/tickets/:id',
-  //   element: <TicketDetail />,
-  //   title: 'Ticket Detail',
-  //   status: true,
-  //   requiresAuth: true,
-  //   icon: 'FileText'
-  // },
+  {
+    path: '/tickets/:id',
+    element: <TicketDetail />,
+    title: 'Ticket Detail',
+    status: true,
+    requiresAuth: true,
+    icon: 'FileText'
+  },
   {
     path: '/analytics',
     element: <Analytics />,
@@ -191,7 +191,7 @@ const routes: RouteType[] = [
 
 const Routers = () => {
   return (
-    <BrowserRouter>
+   
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
@@ -226,9 +226,9 @@ const Routers = () => {
           />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
   );
 };
 
 export default Routers;
 export { routes };
+

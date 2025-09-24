@@ -8,5 +8,5 @@ export interface Company {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
-  customers?: any[]; // Replace with Customer[] if you have a Customer type
+  customers?: any[];
 }
