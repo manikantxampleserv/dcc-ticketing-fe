@@ -54,7 +54,7 @@ export const createTicketFn = async (body: Ticket) => {
  * @param {Ticket} body - ticket data
  * @returns {Promise<Ticket>} - response data
  */
-export const updateTicketFn = async (body: Ticket) => {
+export const updateTicketFn = async (id: number, body: Ticket) => {
   try {
     const response = await axiosInstance.put(`/ticket/${body.id}`, body);
     return response.data;

@@ -1,282 +1,267 @@
-// import { useState, useEffect } from 'react';
-// import { Button, Input, Stack, Typography, Select, Option } from '@mui/joy';
-// import { useMutation, useQueryClient } from '@tanstack/react-query';
-// import toast from 'react-hot-toast';
-// import { Ticket } from 'types';
-// import { createTicketFn, updateTicketFn } from 'services/Tickets';
-
-// interface ManageTicketProps {
-//   ticket?: Ticket | null; // null for create
-//   onClose: () => void;
-// }
-
-// const ManageTicket = ({ ticket, onClose }: ManageTicketProps) => {
-//   const queryClient = useQueryClient();
-
-//   const [formData, setFormData] = useState({
-//     subject: '',
-//     description: '',
-//     priority: 'Low',
-//     status: 'Open',
-//     assignee_id: ''
-//   });
-
-//   // Pre-fill for edit
-//   useEffect(() => {
-//     if (ticket) {
-//       setFormData({
-//         subject: ticket.subject || '',
-//         description: ticket.description || '',
-//         priority: ticket.priority || 'Low',
-//         status: ticket.status || 'Open',
-//         assignee_id: ticket.assigned_agent_id ? String(ticket.assigned_agent_id) : ''
-//       });
-//     } else {
-//       setFormData({
-//         subject: '',
-//         description: '',
-//         priority: 'Low',
-//         status: 'Open',
-//         assignee_id: ''
-//       });
-//     }
-//   }, [ticket]);
-
-//   // Create mutation
-//   const createMutation = useMutation<
-//     Ticket,
-//     Error,
-//     Omit<Ticket, 'id' | 'ticket_number' | 'created_at' | 'updated_at'> // TVariables (mutate argument)
-//   >(createTicketFn, {
-//     onSuccess: () => {
-//       toast.success('Ticket created successfully!');
-//       queryClient.invalidateQueries({ queryKey: ['tickets'] });
-//       onClose();
-//     },
-//     onError: (err: any) => toast.error(err?.message || 'Error creating ticket')
-//   });
-
-//   const updateMutation = useMutation<
-//     Ticket,
-//     Error,
-//     Partial<Omit<Ticket, 'ticket_number' | 'created_at' | 'updated_at'>> & { id: number }
-//   >(updateTicketFn, {
-//     onSuccess: () => {
-//       toast.success('Ticket updated successfully!');
-//       queryClient.invalidateQueries({ queryKey: ['tickets'] });
-//       onClose();
-//     },
-//     onError: (err: any) => toast.error(err?.message || 'Error updating ticket')
-//   });
-
-//   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-//     const { name, value } = e.target;
-//     setFormData(prev => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleSubmit = () => {
-//     if (ticket) {
-//       updateMutation.mutate({ ...formData, id: ticket.id });
-//     } else {
-//       createMutation.mutate(formData);
-//     }
-//   };
-
-//   return (
-//     <div className="p-4 bg-white rounded-lg border shadow-md max-w-md mx-auto">
-//       <Typography level="h6">{ticket ? 'Edit Ticket' : 'Create Ticket'}</Typography>
-
-//       <Stack spacing={2} mt={2}>
-//         <Input placeholder="Subject" name="subject" value={formData.subject} onChange={handleChange} />
-//         <Input placeholder="Description" name="description" value={formData.description} onChange={handleChange} />
-//         <Select
-//           name="priority"
-//           value={formData.priority}
-//           onChange={value => setFormData(prev => ({ ...prev, priority: value }))}
-//         >
-//           <Option value="Low">Low</Option>
-//           <Option value="Medium">Medium</Option>
-//           <Option value="High">High</Option>
-//         </Select>
-
-//         <Select
-//           name="status"
-//           value={formData.status}
-//           onChange={value => setFormData(prev => ({ ...prev, status: value }))}
-//         >
-//           <Option value="Open">Open</Option>
-//           <Option value="In Progress">In Progress</Option>
-//           <Option value="Closed">Closed</Option>
-//         </Select>
-//         <Select
-//           name="status"
-//           value={formData.status}
-//           onChange={e => handleChange({ target: { name: 'status', value: e } } as any)}
-//         >
-//           <Option value="Open">Open</Option>
-//           <Option value="In Progress">In Progress</Option>
-//           <Option value="Closed">Closed</Option>
-//         </Select>
-//         <Input placeholder="Assignee ID" name="assignee_id" value={formData.assignee_id} onChange={handleChange} />
-//       </Stack>
-
-//       <Stack direction="row" spacing={2} justifyContent="flex-end" mt={3}>
-//         <Button color="neutral" onClick={onClose}>
-//           Cancel
-//         </Button>
-//         <Button onClick={handleSubmit} loading={createMutation.isLoading || updateMutation.isLoading}>
-//           {ticket ? 'Update' : 'Create'}
-//         </Button>
-//       </Stack>
-//     </div>
-//   );
-// };
-
-// export default ManageTicket;
-import { formControlClasses, Modal, ModalClose, ModalDialog, Sheet } from '@mui/joy';
-import { Button, Input, Stack, Typography, Select, Option } from '@mui/joy';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Button,
+  FormControl,
+  FormLabel,
+  Modal,
+  ModalClose,
+  ModalDialog,
+  Option,
+  Select,
+  Sheet,
+  Textarea
+} from '@mui/joy';
+import { DateTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFormik } from 'formik';
 import toast from 'react-hot-toast';
+import { createTicketFn, updateTicketFn } from 'services/Ticket';
+import CustomInput from 'shared/CustomInput';
+import CustomSelect from 'shared/CustomSelect';
+import dayjs from 'dayjs';
 import { Ticket } from 'types';
-import { createTicketFn, updateTicketFn } from 'services/Tickets';
-import { useState, useEffect } from 'react';
-
-interface ManageTicketProps {
+import { customersFn } from 'services/Customers';
+import { categoriesFn } from 'services/Category';
+import { usersFn } from 'services/users';
+import CustomFilePicker from 'shared/CustomFilePicker';
+interface ManageTicketsProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  ticket?: Ticket | null;
+  selected: Ticket | null;
+  setSelected: (ticket: Ticket | null) => void;
 }
 
-type Priority = 'Low' | 'Medium' | 'High';
-type Status = 'Open' | 'In Progress' | 'Closed';
+const priorities = ['low', 'medium', 'high'];
+const statuses = ['open', 'pending', 'closed'];
+const sources = ['email', 'phone', 'chat', 'web'];
+const slaStatuses = ['met', 'breached', 'pending'];
+const tagsList = ['Bug', 'Feature', 'Urgent', 'Customer', 'Backend', 'UI']; // example tags
 
-const ManageTicket = ({ open, setOpen, ticket }: ManageTicketProps) => {
-  const queryClient = useQueryClient();
+const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, setSelected }) => {
+  const isEdit = !!selected;
+  const client = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    subject: '',
-    description: '',
-    priority: 'Low' as Priority,
-    status: 'Open' as Status,
-    assignee_id: '',
-    customer_id: '',
-    category_id: ''
+  const handleClose = () => {
+    setOpen(false);
+    setSelected(null);
+  };
+
+  // API Calls
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersFn({ page: 1, limit: 1000 }) // fetch all users
+  });
+  console.log(usersData);
+  const { data: customersData } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => customersFn({ page: 1, limit: 1000 }) // fetch all customers
   });
 
-  useEffect(() => {
-    if (ticket) {
-      setFormData({
-        subject: ticket.subject || '',
-        description: ticket.description || '',
-        priority: (ticket.priority as Priority) || 'Low',
-        status: (ticket.status as Status) || 'Open',
-        assignee_id: ticket.assigned_agent_id ? String(ticket.assigned_agent_id) : '',
-        customer_id: ticket.customer_id ? String(ticket.customer_id) : '',
-        category_id: ticket.category_id ? String(ticket.category_id) : ''
-      });
-    } else {
-      setFormData({
-        subject: '',
-        description: '',
-        priority: 'Low',
-        status: 'Open',
-        assignee_id: '',
-        customer_id: '',
-        category_id: ''
-      });
+  const { data: categoriesData } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesFn({ page: 1, limit: 1000 }) // fetch all categories
+  });
+
+  const agents = usersData?.data || [];
+  const customers = customersData?.data || [];
+  const categories = categoriesData?.data || [];
+
+  // Mutations
+  const { mutate: createTicket, isPending: isCreating } = useMutation({
+    mutationFn: createTicketFn,
+    onSuccess: res => {
+      toast.success(res.message);
+      handleClose();
+      client.refetchQueries({ queryKey: ['ticket'] });
     }
-  }, [ticket]);
-
-  const createMutation = useMutation({
-    mutationFn: (body: Omit<Ticket, 'id' | 'ticket_number' | 'created_at' | 'updated_at'>) => createTicketFn(body),
-    onSuccess: () => {
-      toast.success('Ticket created successfully');
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      setOpen(false);
-    },
-    onError: (err: any) => toast.error(err?.message || 'Error creating ticket')
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (body: Partial<Omit<Ticket, 'ticket_number' | 'created_at' | 'updated_at'>> & { id: number }) =>
-      updateTicketFn(body),
-    onSuccess: () => {
-      toast.success('Ticket updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      setOpen(false);
-    },
-    onError: (err: any) => toast.error(err?.message || 'Error updating ticket')
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: keyof typeof formData, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = () => {
-    if (ticket) {
-      updateMutation.mutate({ ...formData, id: ticket.id });
-    } else {
-      createMutation.mutate(formData);
+  const { mutate: updateTicket, isPending: isUpdating } = useMutation({
+    mutationFn: (data: any) => updateTicketFn(selected!.id, data),
+    onSuccess: res => {
+      toast.success(res.message);
+      handleClose();
+      client.refetchQueries({ queryKey: ['ticket'] });
     }
+  });
+
+  const initialValues = {
+    customer_id: selected?.customer_id || '',
+    assigned_agent_id: selected?.assigned_agent_id || '',
+    category_id: selected?.category_id || '',
+    subject: selected?.subject || '',
+    description: selected?.description || '',
+    priority: selected?.priority || 'medium',
+    status: selected?.status || 'open',
+    source: selected?.source || 'email',
+    sla_deadline: selected?.sla_deadline || '',
+    sla_status: selected?.sla_status || 'pending',
+    assigned_by: selected?.assigned_by || '',
+    time_spent_minutes: selected?.time_spent_minutes || 0,
+    tags: selected?.tags || [],
+    merged_into_ticket_id: selected?.merged_into_ticket_id || ''
   };
+
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    onSubmit: values => {
+      const payload = {
+        ...values
+      };
+      if (isEdit) updateTicket(payload);
+      else createTicket(payload);
+    }
+  });
 
   return (
-    <Modal open={open} onClose={() => setOpen(false)}>
+    <Modal open={open} onClose={handleClose}>
       <ModalDialog
         size="lg"
-        component={Sheet}
-        className="lg:!w-[50%] !w-[90%] max-h-[80%] overflow-y-auto"
         sx={{ padding: '1rem' }}
+        component={Sheet}
+        className="lg:!w-[60%] !w-[90%] max-h-[80%] overflow-y-auto"
       >
-        <div className="flex justify-between items-center mb-4">
-          <Typography fontSize="lg" fontWeight="bold">
-            {ticket ? 'Edit Ticket' : 'Create Ticket'}
-          </Typography>
-          <ModalClose onClick={() => setOpen(false)} />
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-lg font-semibold">{isEdit ? 'Edit Ticket' : 'Create Ticket'}</p>
+            <p className="text-sm text-gray-500">Fill in the information of the ticket.</p>
+          </div>
+          <ModalClose onClick={handleClose} />
         </div>
 
-        <Stack spacing={2}>
-          <Input placeholder="Subject" name="subject" value={formData.subject} onChange={handleChange} />
-          <Input placeholder="Description" name="description" value={formData.description} onChange={handleChange} />
-          <Select
-            name="priority"
-            value={formData.priority}
-            onChange={value => handleSelectChange('priority', value as string)}
-          >
-            <Option value="Low">Low</Option>
-            <Option value="Medium">Medium</Option>
-            <Option value="High">High</Option>
-          </Select>
-          <Select
-            name="status"
-            value={formData.status}
-            onChange={value => handleSelectChange('status', value as string)}
-          >
-            <Option value="Open">Open</Option>
-            <Option value="In Progress">In Progress</Option>
-            <Option value="Closed">Closed</Option>
-          </Select>
-          <Input placeholder="Assignee ID" name="assignee_id" value={formData.assignee_id} onChange={handleChange} />
-          <Input placeholder="Customer ID" name="customer_id" value={formData.customer_id} onChange={handleChange} />
-          <Input placeholder="Category ID" name="category_id" value={formData.category_id} onChange={handleChange} />
-        </Stack>
+        <form onSubmit={formik.handleSubmit}>
+          <div className="grid lg:grid-cols-2 gap-4">
+            <CustomFilePicker label="Avatar" name="avatar" accept="image/*" formik={formik} />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end" mt={3}>
-          <Button color="neutral" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} loading={createMutation.isLoading || updateMutation.isLoading}>
-            {ticket ? 'Update' : 'Create'}
-          </Button>
-        </Stack>
+            {/* Customer Dropdown */}
+            <CustomSelect label="Customer" name="customer_id" formik={formik}>
+              {customers.map((c: any) => (
+                <Option key={c.id} value={c.id}>
+                  {c.first_name} {c.last_name}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            {/* Agent Dropdown */}
+            <CustomSelect label="Assigned Agent" name="assigned_agent_id" formik={formik}>
+              {(agents ?? []).map((a: any) => (
+                <Option key={a.id} value={a.id}>
+                  {a.first_name} {a.last_name}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            {/* Category Dropdown */}
+            <CustomSelect label="Category" name="category_id" formik={formik}>
+              {categories.map((cat: any) => (
+                <Option key={cat.id} value={cat.id}>
+                  {cat.category_name}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            <CustomInput label="Subject" name="subject" formik={formik} />
+
+            {/* Priority */}
+            <CustomSelect label="Priority" name="priority" formik={formik}>
+              {priorities.map(p => (
+                <Option key={p} value={p}>
+                  {p}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            {/* Status */}
+            <CustomSelect label="Status" name="status" formik={formik}>
+              {statuses.map(s => (
+                <Option key={s} value={s}>
+                  {s}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            {/* Source */}
+            <CustomSelect label="Source" name="source" formik={formik}>
+              {sources.map(s => (
+                <Option key={s} value={s}>
+                  {s}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            {/* SLA Deadline */}
+            <FormControl>
+              <FormLabel>SLA Deadline</FormLabel>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DateTimePicker
+                  value={formik.values.sla_deadline ? dayjs(formik.values.sla_deadline) : null}
+                  onChange={newValue => formik.setFieldValue('sla_deadline', newValue ? newValue.toISOString() : '')}
+                />
+              </LocalizationProvider>
+            </FormControl>
+
+            {/* SLA Status */}
+            <CustomSelect label="SLA Status" name="sla_status" formik={formik}>
+              {slaStatuses.map(s => (
+                <Option key={s} value={s}>
+                  {s}
+                </Option>
+              ))}
+            </CustomSelect>
+
+            <CustomInput label="Assigned By" name="assigned_by" formik={formik} />
+            <CustomInput label="Time Spent (minutes)" type="number" name="time_spent_minutes" formik={formik} />
+
+            {/* Tags Multi Select */}
+            <FormControl>
+              <FormLabel>Tags</FormLabel>
+              <Select
+                multiple
+                value={formik.values.tags}
+                onChange={(_, val) => formik.setFieldValue('tags', val)}
+                placeholder="Select tags"
+              >
+                {tagsList.map(tag => (
+                  <Option key={tag} value={tag}>
+                    {tag}
+                  </Option>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Merge Into Ticket */}
+            <CustomSelect label="Merge Into Ticket" name="merged_into_ticket_id" formik={formik}>
+              {/* You can fetch tickets API and list here */}
+              <Option value="">None</Option>
+            </CustomSelect>
+          </div>
+
+          {/* Description */}
+          <FormControl>
+            <FormLabel>Description</FormLabel>
+            <Textarea
+              name="description"
+              minRows={3}
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              placeholder="Enter ticket description..."
+            />
+          </FormControl>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-5">
+            <Button color="neutral" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button disabled={isEdit ? isUpdating : isCreating} color="primary" type="submit">
+              {isEdit ? (isUpdating ? 'Updating...' : 'Update') : isCreating ? 'Creating...' : 'Create'}
+            </Button>
+          </div>
+        </form>
       </ModalDialog>
     </Modal>
   );
 };
 
-export default ManageTicket;
+export default ManageTickets;
