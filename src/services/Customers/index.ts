@@ -56,12 +56,9 @@ export const createCustomerFn = async (body: Customer) => {
  * @returns {Promise<Customer>} - response data
  */
 export const updateCustomerFn = async (body: Customer) => {
-  try {
-    const response = await axiosInstance.put(`/customers/${body.id}`, body);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const { id, ...rest } = body;
+  const response = await axiosInstance.put(`/customers/${id}`, rest);
+  return response.data;
 };
 
 /**

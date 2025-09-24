@@ -1,4 +1,5 @@
 import axiosInstance from 'configs/axios';
+import toast from 'react-hot-toast';
 import { Department } from 'types/Departments';
 
 /**
@@ -52,11 +53,17 @@ export const updateDepartmentFn = async (body: { id: number; department_name: st
 /**
  * Delete departments
  */
-export const deleteDepartmentFn = async (ids: number[]) => {
+export const deleteDepartmentsFn = async (id: number) => {
   try {
-    // Send IDs as query params (safe for most backends)
-    const response = await axiosInstance.delete('/department', { params: { ids: ids.join(',') } });
-    return response.data;
+    if (id) {
+      const response = await axiosInstance.delete('/department', {
+        data: { id }
+      });
+      return response.data;
+    } else {
+      toast.error('Invalid department id');
+      throw new Error('Invalid department id');
+    }
   } catch (error) {
     throw error;
   }

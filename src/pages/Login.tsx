@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import { Lock, Mail, Ticket } from 'lucide-react';
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginFn } from 'services/Authentication';
+import { loginFn } from 'services/authentication';
 import CustomInput from 'shared/CustomInput';
 
 const Login: React.FC = () => {

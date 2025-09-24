@@ -2,6 +2,7 @@
  * Service for interacting with roles API
  */
 import axiosInstance from 'configs/axios';
+import toast from 'react-hot-toast';
 import { Role } from 'types/Roles';
 
 /**
@@ -56,7 +57,11 @@ export const createRoleFn = async (body: Role) => {
  */
 export const updateRoleFn = async (body: Role) => {
   try {
-    const response = await axiosInstance.put(`/role/${body.id}`, body);
+    // destructure karke id ko alag kar lo
+    const { id, ...updateData } = body;
+
+    // id URL me bhejo, body me mat bhejo
+    const response = await axiosInstance.put(`/role/${id}`, updateData);
     return response.data;
   } catch (error) {
     throw error;
@@ -71,8 +76,13 @@ export const updateRoleFn = async (body: Role) => {
  */
 export const deleteRoleFn = async (data: { ids: number[] }) => {
   try {
-    const response = await axiosInstance.delete(`/role`, { data });
-    return response.data;
+    if (data.ids.length >= 1) {
+      const response = await axiosInstance.delete(`/role/${data.ids[0]}`);
+      return response.data;
+    } else {
+      toast.error('Please delete roles one by one.');
+      throw new Error('Please delete roles one by one.');
+    }
   } catch (error) {
     throw error;
   }

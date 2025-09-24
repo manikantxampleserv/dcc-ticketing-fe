@@ -15,6 +15,14 @@ export const ticketsFn = async (params?: {
   }
 };
 
+export const getTicketStatsFn = async (userId: string) => {
+  try {
+    const response = await axiosInstance.post('/getTicketStatus', { user_id: userId });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 // Get single ticket
 export const ticketFn = async (id: number): Promise<Ticket> => {
   try {
