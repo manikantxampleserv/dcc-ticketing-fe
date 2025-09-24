@@ -22,6 +22,7 @@ import RolesManagement from 'pages/Roles';
 import SystemSettingsManagement from 'pages/SystemSetting';
 import { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import AgentsManagement from 'pages/Agents';
 
 interface RouteType {
   path: string;
@@ -154,6 +155,13 @@ const routes: RouteType[] = [
     requiresAuth: true
   },
   {
+    path: '/agents', // match the href from sidebar
+    element: <AgentsManagement />, // component to render
+    title: 'Agent Management', // page title
+    status: true, // active route
+    requiresAuth: true // route protected
+  },
+  {
     path: '/escalations',
     element: (
       <EscalationManager escalationRules={[]} onCreateRule={() => {}} onUpdateRule={() => {}} onDeleteRule={() => {}} />
@@ -191,44 +199,42 @@ const routes: RouteType[] = [
 
 const Routers = () => {
   return (
-   
-      <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          {/* Protected Routes with Layout */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            {routes.map(route => (
-              <Route key={route.path} path={route.path} element={<ProtectedRoute>{route.element}</ProtectedRoute>} />
-            ))}
-          </Route>
-          {/* Catch all route */}
-          <Route
-            path="*"
-            element={
-              <ProtectedRoute>
-                <Navigate to="/dashboard" replace />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+    <AuthProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        {/* Protected Routes with Layout */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          {routes.map(route => (
+            <Route key={route.path} path={route.path} element={<ProtectedRoute>{route.element}</ProtectedRoute>} />
+          ))}
+        </Route>
+        {/* Catch all route */}
+        <Route
+          path="*"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/dashboard" replace />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </AuthProvider>
   );
 };
 
 export default Routers;
 export { routes };
-

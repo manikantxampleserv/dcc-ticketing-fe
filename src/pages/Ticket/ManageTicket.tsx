@@ -86,9 +86,10 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
   });
 
   const initialValues = {
-    customer_id: selected?.customer_id || '',
-    assigned_agent_id: selected?.assigned_agent_id || '',
-    category_id: selected?.category_id || '',
+    attachment_urls: selected?.attachment_urls || [],
+    customer_id: selected?.customer_id || null,
+    assigned_agent_id: selected?.assigned_agent_id || null,
+    category_id: selected?.category_id || null,
     subject: selected?.subject || '',
     description: selected?.description || '',
     priority: selected?.priority || 'medium',
@@ -96,10 +97,10 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
     source: selected?.source || 'email',
     sla_deadline: selected?.sla_deadline || '',
     sla_status: selected?.sla_status || 'pending',
-    assigned_by: selected?.assigned_by || '',
+    // assigned_by: selected?.assigned_by || '',
     time_spent_minutes: selected?.time_spent_minutes || 0,
     tags: selected?.tags || [],
-    merged_into_ticket_id: selected?.merged_into_ticket_id || ''
+    merged_into_ticket_id: selected?.merged_into_ticket_id || null
   };
 
   const formik = useFormik({
@@ -107,7 +108,8 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
     enableReinitialize: true,
     onSubmit: values => {
       const payload = {
-        ...values
+        ...values,
+        tags: Array.isArray(values.tags) ? JSON.stringify(values.tags) : values.tags // convert array to comma-separated string
       };
       if (isEdit) updateTicket(payload);
       else createTicket(payload);
@@ -132,7 +134,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
 
         <form onSubmit={formik.handleSubmit}>
           <div className="grid lg:grid-cols-2 gap-4">
-            <CustomFilePicker label="Avatar" name="avatar" accept="image/*" formik={formik} />
+            <CustomFilePicker label="Attachment" name="attachment_urls" accept="image/*" formik={formik} />
 
             {/* Customer Dropdown */}
             <CustomSelect label="Customer" name="customer_id" formik={formik}>
@@ -210,7 +212,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
               ))}
             </CustomSelect>
 
-            <CustomInput label="Assigned By" name="assigned_by" formik={formik} />
+            {/* <CustomInput label="Assigned By" name="assigned_by" formik={formik} /> */}
             <CustomInput label="Time Spent (minutes)" type="number" name="time_spent_minutes" formik={formik} />
 
             {/* Tags Multi Select */}

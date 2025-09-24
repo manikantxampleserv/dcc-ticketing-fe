@@ -29,6 +29,11 @@ const navigation = [
   { name: 'Department', href: '/department', icon: Building },
   { name: 'Categories', href: '/categories', icon: FolderTree },
   { name: 'Companies', href: '/companies', icon: Building2 }
+  // {
+  //   name: 'Agents',
+  //   href: '/agents',
+  //   icon: UserCog
+  // }
 ];
 const Sidebar: React.FC = () => {
   const { state } = useTickets();

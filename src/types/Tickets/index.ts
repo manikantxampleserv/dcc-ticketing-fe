@@ -1,5 +1,6 @@
 export interface Ticket {
   id: number;
+  attachment_urls?: string[]; // Array of attachment URLs
   ticket_number: string;
   customer_id: number;
   assigned_agent_id?: number | null;
