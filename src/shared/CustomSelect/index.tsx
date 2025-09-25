@@ -42,20 +42,22 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   ...restProps
 }) => {
   const fieldValue = formik?.values[name] || '';
-  const fieldError = formik?.touched[name] && formik?.errors[name];
-  const hasError = Boolean(fieldError);
+  const fieldError = formik?.errors[name];
+  // const hasError = Boolean(fieldError);
+  const touched = formik?.touched[name];
+  const error = formik?.errors[name];
+  const hasError = Boolean(touched && error);
 
   const handleChange = (_: React.SyntheticEvent | null, newValue: string | number | null) => {
     if (formik) {
-      formik.setFieldValue(name, newValue);
+      formik.setFieldValue(name, newValue, true);
     }
   };
-
-  const handleBlur = () => {
-    if (formik) {
-      formik.setFieldTouched(name, true);
-    }
-  };
+  // const handleBlur = () => {
+  //   if (formik) {
+  //     formik.setFieldTouched(name, true, true);
+  //   }
+  // };
 
   return (
     <FormControl error={hasError} required={required} disabled={disabled} sx={{ width: fullWidth ? '100%' : 'auto' }}>
@@ -69,11 +71,12 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         value={fieldValue}
         placeholder={placeholder || `Select ${label.toLowerCase()}`}
         onChange={handleChange}
-        onClose={handleBlur}
+        // onClose={handleBlur}
         disabled={disabled}
         size={size}
         variant={variant}
-        color={hasError ? 'danger' : color}
+        color={color}
+        // color={hasError ? 'danger' : color}
         startDecorator={startDecorator}
         endDecorator={endDecorator}
         {...restProps}

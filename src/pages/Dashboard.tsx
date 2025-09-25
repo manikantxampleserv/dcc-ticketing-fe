@@ -4,7 +4,8 @@ import { Ticket, Clock, CheckCircle, AlertTriangle, TrendingUp, Users, Star, Arr
 import { formatDistanceToNow } from 'date-fns';
 import { dashboardFn, DashboardStats, Ticket as TicketType } from '../services/Dashboard';
 import { toast } from 'react-hot-toast';
-
+import ticket from '../assets/Halloween tickets-rafiki.svg';
+import Urgent from '../assets/Urgent-rafiki.svg';
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tickets, setTickets] = useState<TicketType[]>([]);
@@ -31,6 +32,7 @@ const Dashboard: React.FC = () => {
 
     fetchDashboard();
   }, []);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[70vh]">
@@ -125,7 +127,15 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="divide-y divide-gray-200">
             {recentTickets.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No tickets available</p>
+              <div className="text-center py-4">
+                <img
+                  src={ticket}
+                  alt="No tickets illustration"
+                  className="mx-auto mb-4"
+                  style={{ maxWidth: '300px', width: '100%' }}
+                />
+                <p className="text-gray-500">No tickets available</p>
+              </div>
             ) : (
               recentTickets.map(ticket => (
                 <Link
@@ -193,7 +203,16 @@ const Dashboard: React.FC = () => {
             </div>
             <div className="p-6">
               {urgentTickets.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No urgent tickets</p>
+                <div className="text-center py-4">
+                  <img
+                    src={Urgent}
+                    alt="No tickets urgent illustration"
+                    className="mx-auto mb-4"
+                    style={{ maxWidth: '200px', width: '30%' }}
+                  />
+
+                  <p className="text-gray-500 text-center py-4">No urgent tickets</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {urgentTickets.slice(0, 3).map(ticket => (

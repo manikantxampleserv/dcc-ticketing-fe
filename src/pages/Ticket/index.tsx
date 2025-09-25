@@ -74,11 +74,16 @@ const TicketManagement = () => {
       render: (_, record) => <Typography>{record.subject}</Typography>
     },
     {
-      key: 'customer_id',
-      dataIndex: 'customer_id',
-      title: 'CUSTOMER ID',
-      render: customerId => <Typography>{customerId}</Typography>
+      key: 'customer',
+      dataIndex: 'customers', // optional, used for reference
+      title: 'Customer',
+      render: (text: any) => (
+        <Typography level="body-sm">
+          {text?.first_name && text?.last_name ? `${text.first_name} ${text.last_name}` : '-'}
+        </Typography>
+      )
     },
+
     {
       key: 'assigned_agent_id',
       dataIndex: 'assigned_agent_id',
