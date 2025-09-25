@@ -13,7 +13,7 @@ import withToast from 'utils/withToast';
  * @param {string} [params.search] - search query
  * @returns {Promise<Object>} - response data
  */
-export const ticketsFn = async (params: { page?: number; limit?: number; search?: string }) => {
+export const ticketsFn = async (params: { page?: number; limit?: number; search?: string; status: string }) => {
   try {
     const response = await axiosInstance.get('/ticket', { params });
     return response.data;
@@ -44,7 +44,7 @@ export const ticketFn = async (id: number): Promise<any> => {
  */
 export const createTicketFn = async (body: Ticket) => {
   try {
-    const response = await axiosInstance.post('/ticket', body);
+    const response = await withToast(() => axiosInstance.post('/ticket', body));
     return response.data;
   } catch (error) {
     throw error;
@@ -64,9 +64,10 @@ export const createCommentFn = async (body: any) => {
  * @param {Ticket} body - ticket data
  * @returns {Promise<Ticket>} - response data
  */
-export const updateTicketFn = async (id: number, body: Ticket) => {
+export const updateTicketFn = async (body: Partial<Ticket>) => {
   try {
-    const response = await axiosInstance.put(`/ticket/${body.id}`, body);
+    const { id, ...datas } = body;
+    const response = await withToast(() => axiosInstance.put(`/ticket/${id}`, { ...datas }));
     return response.data;
   } catch (error) {
     throw error;
@@ -81,7 +82,7 @@ export const updateTicketFn = async (id: number, body: Ticket) => {
  */
 export const deleteTicketFn = async (data: { ids: number[] }) => {
   try {
-    const response = await axiosInstance.delete(`/ticket`, { data });
+    const response = await withToast(() => axiosInstance.delete(`/ticket`, { data }));
     return response.data;
   } catch (error) {
     throw error;

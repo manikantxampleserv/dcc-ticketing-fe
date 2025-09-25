@@ -1,16 +1,19 @@
 import { AlertTriangle, Check, Merge, Paperclip, RotateCcw, Upload, UserPlus } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Ticket, User } from '../types';
 
 interface TicketActionsProps {
   ticket: Ticket;
   users: User[];
-  onAllocateTicket: (ticketId: string, userId: string, reason?: string) => void;
-  onMergeTickets: (parentTicketId: string, childTicketId: string, reason: string) => void;
-  onReopenTicket: (ticketId: string, reason: string) => void;
+
+  // setSearchUser: () => void;
+  onAllocateTicket: (ticketId: number, userId: number, reason?: string) => void;
+  onMergeTickets: (parentTicketId: number, childTicketId: number, reason: string) => void;
+  onReopenTicket: (ticketId: number, reason: string) => void;
   onAddAttachment: (ticketId: string, file: File, isPublic: boolean) => void;
   availableTickets: Ticket[];
+  searchUser: string;
 }
 
 export default function TicketActions({
@@ -20,17 +23,19 @@ export default function TicketActions({
   onMergeTickets,
   onReopenTicket,
   onAddAttachment,
-  availableTickets
-}: TicketActionsProps) {
+  availableTickets,
+  searchUser
+}: // setSearchUser
+TicketActionsProps) {
   const [showAllocateModal, setShowAllocateModal] = useState(false);
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [showReopenModal, setShowReopenModal] = useState(false);
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
 
-  const canAllocate = ticket.status !== 'closed';
-  const canMerge = ticket.status !== 'closed' && !ticket.is_merged;
-  const canReopen = ticket.status === 'resolved' || ticket.status === 'closed';
-  const canAttach = ticket.status !== 'closed';
+  const canAllocate = ticket.status !== 'Closed';
+  const canMerge = ticket.status !== 'Closed' && !ticket.is_merged;
+  const canReopen = ticket.status === 'resolved' || ticket.status === 'Closed';
+  const canAttach = ticket.status !== 'Closed';
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -93,30 +98,33 @@ export default function TicketActions({
           Attach
         </button>
       </div>
-
       {/* Ticket Info */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="text-sm text-gray-600 space-y-1">
-          {ticket?.reopen_count && ticket?.reopen_count > 0 && (
-            <div className="flex items-center text-orange-600">
-              <RotateCcw className="h-4 w-4 mr-1" />
-              Reopened {ticket.reopen_count} time(s)
-            </div>
-          )}
-          {ticket.is_merged && (
-            <div className="flex items-center text-purple-600">
-              <Merge className="h-4 w-4 mr-1" />
-              Merged ticket
-            </div>
-          )}
-          {ticket?.attachments?.length > 0 && (
-            <div className="flex items-center text-blue-600">
-              <Paperclip className="h-4 w-4 mr-1" />
-              {ticket?.attachments?.length} attachment(s)
-            </div>
-          )}
+      {((ticket?.reopen_count !== undefined && ticket?.reopen_count > 0) ||
+        ticket.is_merged ||
+        ticket?.attachments?.length > 0) && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="text-sm text-gray-600 space-y-1">
+            {ticket?.reopen_count !== undefined && ticket?.reopen_count > 0 && (
+              <div className="flex items-center text-orange-600">
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Reopened {ticket.reopen_count} time(s)
+              </div>
+            )}
+            {ticket.is_merged && (
+              <div className="flex items-center text-purple-600">
+                <Merge className="h-4 w-4 mr-1" />
+                Merged ticket
+              </div>
+            )}
+            {ticket?.attachments?.length > 0 && (
+              <div className="flex items-center text-blue-600">
+                <Paperclip className="h-4 w-4 mr-1" />
+                {ticket?.attachments?.length} attachment(s)
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Modals */}
       {showAllocateModal && (
@@ -156,64 +164,203 @@ export default function TicketActions({
 interface AllocateModalProps {
   ticket: Ticket;
   users: User[];
-  onAllocate: (ticketId: string, userId: string, reason?: string) => void;
+  onAllocate: (ticketId: number, userId: number, reason?: string) => void;
   onClose: () => void;
 }
 
-function AllocateModal({ ticket, onAllocate, onClose }: AllocateModalProps) {
+function AllocateModal({ ticket, users, onAllocate, onClose }: AllocateModalProps) {
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  console.log('Users : ', filteredUsers, users);
+  // Filter users based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredUsers(users || []);
+    } else {
+      const filtered = users?.filter(
+        user =>
+          `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredUsers(filtered || []);
+    }
+  }, [searchTerm, users]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleUserSelect = (user: User) => {
+    setSelectedUserId(user.id);
+    setSearchTerm(`${user.first_name} ${user.last_name}`);
+    setIsOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setSelectedUserId('');
+    setIsOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId) {
       toast.error('Please select a user');
       return;
     }
-    onAllocate(ticket?.id, selectedUserId, reason);
-    onClose();
-    toast.success('Ticket allocated successfully');
+
+    setIsLoading(true);
+    try {
+      await onAllocate(ticket?.id, Number(selectedUserId), reason);
+      onClose();
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Allocate Ticket</h2>
+      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Allocate Ticket</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Assign to User</label>
-            <select
-              required
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              value={selectedUserId}
-              onChange={e => setSelectedUserId(e.target.value)}
-            >
-              <option value="">Select a user...</option>
-            </select>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Searchable User Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2">
+              Assign to User
+            </label>
+            <div className="relative">
+              <input
+                ref={inputRef}
+                id="user-search"
+                type="text"
+                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+                placeholder="Search users by name or email..."
+                value={searchTerm}
+                onChange={handleInputChange}
+                onFocus={() => setIsOpen(true)}
+                autoComplete="off"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isOpen && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map(user => (
+                    <div
+                      key={user.id}
+                      onClick={() => handleUserSelect(user)}
+                      className="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm font-medium">
+                            {user.first_name.charAt(0)}
+                            {user.last_name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {user.first_name} {user.last_name}
+                          </div>
+                          {user.email && <div className="text-sm text-gray-500">{user.email}</div>}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-gray-500 text-center">No users found matching "{searchTerm}"</div>
+                )}
+              </div>
+            )}
           </div>
 
+          {/* Reason Textarea */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+            <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
+              Reason (Optional)
+            </label>
             <textarea
+              id="reason"
               rows={3}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
               value={reason}
               onChange={e => setReason(e.target.value)}
               placeholder="Why are you allocating this ticket?"
             />
           </div>
 
+          {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-5 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200"
+              disabled={isLoading}
             >
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              Allocate Ticket
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2"
+              disabled={!selectedUserId || isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Allocating...</span>
+                </>
+              ) : (
+                <span>Allocate Ticket</span>
+              )}
             </button>
           </div>
         </form>
@@ -226,7 +373,7 @@ function AllocateModal({ ticket, onAllocate, onClose }: AllocateModalProps) {
 interface MergeModalProps {
   ticket: Ticket;
   availableTickets: Ticket[];
-  onMerge: (parentTicketId: string, childTicketId: string, reason: string) => void;
+  onMerge: (parentTicketId: number, childTicketId: number, reason: string) => void;
   onClose: () => void;
 }
 
@@ -234,7 +381,7 @@ function MergeModal({ ticket, availableTickets, onMerge, onClose }: MergeModalPr
   const [selectedTicketId, setSelectedTicketId] = useState('');
   const [reason, setReason] = useState('');
 
-  const mergeableTickets = availableTickets.filter(t => t.id !== ticket.id && !t.is_merged && t.status !== 'closed');
+  const mergeableTickets = availableTickets.filter(t => t.id !== ticket.id && !t.is_merged && t.status !== 'Closed');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,7 +457,7 @@ function MergeModal({ ticket, availableTickets, onMerge, onClose }: MergeModalPr
 // Reopen Modal
 interface ReopenModalProps {
   ticket: Ticket;
-  onReopen: (ticketId: string, reason: string) => void;
+  onReopen: (ticketId: number, reason: string) => void;
   onClose: () => void;
 }
 
@@ -325,7 +472,7 @@ function ReopenModal({ ticket, onReopen, onClose }: ReopenModalProps) {
     }
     onReopen(ticket?.id, reason);
     onClose();
-    toast.success('Ticket reopened successfully');
+    // toast.success('Ticket reopened successfully');
   };
 
   return (

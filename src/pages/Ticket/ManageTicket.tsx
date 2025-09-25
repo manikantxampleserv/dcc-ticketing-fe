@@ -31,9 +31,9 @@ interface ManageTicketsProps {
   setSelected: (ticket: Ticket | null) => void;
 }
 
-const priorities = ['low', 'medium', 'high'];
-const statuses = ['open', 'pending', 'closed'];
-const sources = ['email', 'phone', 'chat', 'web'];
+const priorities = ['Low', 'Medium', 'High'];
+const statuses = ['Open', 'Pending', 'Closed'];
+const sources = ['Email', 'Phone', 'Chat', 'Web'];
 const slaStatuses = ['met', 'breached', 'pending'];
 const tagsList = ['Bug', 'Feature', 'Urgent', 'Customer', 'Backend', 'UI']; // example tags
 
@@ -77,7 +77,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
   });
 
   const { mutate: updateTicket, isPending: isUpdating } = useMutation({
-    mutationFn: (data: any) => updateTicketFn(selected!.id, data),
+    mutationFn: (data: any) => updateTicketFn({ id: selected?.id, ...data }),
     onSuccess: res => {
       toast.success(res.message);
       handleClose();

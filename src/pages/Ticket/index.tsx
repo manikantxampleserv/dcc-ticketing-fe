@@ -30,7 +30,7 @@ const TicketManagement = () => {
         page: currentPage,
         limit: pageSize,
         search: search || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined
+        status: statusFilter !== 'all' ? statusFilter : ''
       })
   });
 

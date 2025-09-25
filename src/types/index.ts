@@ -248,7 +248,7 @@ export interface Ticket {
   subject: string;
   description: string;
   priority: 'Low' | 'Medium' | 'High';
-  status: 'Open' | 'In Progress' | 'Closed';
+  status: 'Open' | 'In Progress' | 'Closed' | 'closed' | 'resolved';
   source?: string;
   sla_deadline?: string | null;
   sla_status?: string | null;
@@ -257,6 +257,7 @@ export interface Ticket {
   closed_at?: string | null;
   assigned_by?: number;
   is_merged?: boolean;
+
   reopen_count?: number;
   time_spent_minutes?: number;
   last_reopened_at?: string | null;
