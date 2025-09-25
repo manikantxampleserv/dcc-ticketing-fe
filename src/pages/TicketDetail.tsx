@@ -24,7 +24,7 @@ import { useTickets } from '../context/TicketContext';
 import { formatDistanceToNow, format } from 'date-fns';
 import toast from 'react-hot-toast';
 import TicketActions from '../components/TicketActions';
-import { createCommentFn, ticketFn } from 'services/Ticket';
+import { createCommentFn, ticketFn, updateTicketFn } from 'services/Ticket';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import TicketDetailSkeleton from './Ticket/TicketDetailSkeleton';
 import { TicketComment } from 'types/Tickets';
@@ -32,6 +32,7 @@ import { usersFn } from 'services/users';
 // ✅ Import react-mentions
 import { MentionsInput, Mention } from 'react-mentions';
 import MentionEditor from './TicketComment';
+import { Ticket } from 'types/index';
 
 export default function TicketDetail() {
   const { id } = useParams();
@@ -47,8 +48,12 @@ export default function TicketDetail() {
   const client = useQueryClient();
   const conversationRef = useRef<HTMLDivElement>(null);
 
-  const { data: TicketDetail, isLoading } = useQuery({
-    queryKey: ['tickets', id],
+  const {
+    data: TicketDetail,
+    isLoading,
+    refetch
+  } = useQuery({
+    queryKey: ['tickets-details', id],
     queryFn: () => ticketFn(Number(id))
   });
   const ticket = TicketDetail?.data;
@@ -58,6 +63,14 @@ export default function TicketDetail() {
     onSuccess: (res: any) => {
       toast.success(res.data?.message || 'Send comment successfully!');
       client.refetchQueries({ queryKey: ['tickets'] });
+    }
+  });
+  const { mutate: updateTicketStatus, isPending: isUpdating } = useMutation({
+    mutationFn: updateTicketFn,
+    onSuccess: (response: any) => {
+      toast.success(response.message || 'Ticket updated successfully!');
+      client.refetchQueries({ queryKey: ['tickets-update'] });
+      refetch();
     }
   });
 
@@ -193,16 +206,18 @@ export default function TicketDetail() {
     );
   }
 
-  const handleAllocateTicket = (ticketId: string, userId: string, reason?: string) => {
+  const handleAllocateTicket = (ticketId: number, userId: number, reason?: string) => {
     console.log('Allocating ticket:', ticketId, 'to user:', userId, 'reason:', reason);
+    updateTicketStatus({ id: ticketId, assigned_agent_id: Number(userId) });
   };
 
-  const handleMergeTickets = (parentTicketId: string, childTicketId: string, reason: string) => {
+  const handleMergeTickets = (parentTicketId: number, childTicketId: number, reason: string) => {
     console.log('Merging tickets:', parentTicketId, childTicketId, 'reason:', reason);
   };
 
-  const handleReopenTicket = (ticketId: string, reason: string) => {
+  const handleReopenTicket = (ticketId: number, reason: string) => {
     console.log('Reopening ticket:', ticketId, 'reason:', reason);
+    updateTicketStatus({ id: ticketId, status: 'Open', reopen_count: ticket?.reopen_count + 1 });
   };
 
   const handleAddAttachment = (ticketId: string, file: File, isPublic: boolean) => {
@@ -215,7 +230,7 @@ export default function TicketDetail() {
       status: newStatus as any,
       updatedAt: new Date().toISOString(),
       ...(newStatus === 'resolved' && { resolvedAt: new Date().toISOString() }),
-      ...(newStatus === 'closed' && { closedAt: new Date().toISOString() })
+      ...(newStatus === 'Closed' && { ClosedAt: new Date().toISOString() })
     };
     updateTicket(updatedTicket);
     toast.success(`Ticket ${newStatus}`);
@@ -236,6 +251,7 @@ export default function TicketDetail() {
   const handleSendMessage = async () => {
     console.log('Send message:', newMessage, 'Internal:', isInternal, 'Attachments:', attachments);
     if (!newMessage.trim()) return;
+
     const cleanedText = newMessage.replace(/\@\[@(.+?)\]\((.+?)\)/g, '@$1');
 
     // ✅ Extract mentioned users from the message
@@ -259,6 +275,7 @@ export default function TicketDetail() {
 
     setNewMessage('');
     setIsInternal(false);
+    setSearchUser('');
     setAttachments(null);
     setMentionedUsers([]); // Clear mentioned users
   };
@@ -493,7 +510,7 @@ export default function TicketDetail() {
           {/* Responses */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {/* Reply Section */}
-            {ticket.status !== 'closed' && (
+            {ticket.status !== 'Closed' && (
               <div className="p-4 border-t">
                 <MentionsInput
                   value={newMessage}
@@ -712,12 +729,14 @@ export default function TicketDetail() {
           {/* Ticket Actions */}
           <TicketActions
             ticket={ticket}
-            users={[]}
+            users={usersData?.data}
             onAllocateTicket={handleAllocateTicket}
             onMergeTickets={handleMergeTickets}
             onReopenTicket={handleReopenTicket}
             onAddAttachment={handleAddAttachment}
             availableTickets={state?.tickets?.filter((t: any) => t?.id !== ticket?.id) || []}
+            searchUser={searchUser}
+            setSearchUser={setSearchUser}
           />
 
           {/* Ticket Info */}
@@ -1021,7 +1040,7 @@ export default function TicketDetail() {
 //       status: newStatus as any,
 //       updatedAt: new Date().toISOString(),
 //       ...(newStatus === 'resolved' && { resolvedAt: new Date().toISOString() }),
-//       ...(newStatus === 'closed' && { closedAt: new Date().toISOString() })
+//       ...(newStatus === 'Closed' && { ClosedAt: new Date().toISOString() })
 //     };
 //     updateTicket(updatedTicket);
 //     toast.success(`Ticket ${newStatus}`);
@@ -1077,7 +1096,7 @@ export default function TicketDetail() {
 //     //   ...ticket,
 //     //   responses: [...ticket.responses, newResponse],
 //     //   updatedAt: new Date().toISOString(),
-//     //   ...(ticket.status === 'open' && { status: 'in-progress' as const })
+//     //   ...(ticket.status === 'Open' && { status: 'in-progress' as const })
 //     // };
 
 //     const formData = new FormData();
@@ -1408,7 +1427,7 @@ export default function TicketDetail() {
 //             </div>
 
 //             {/* Reply Form */}
-//             {ticket.status !== 'closed' && (
+//             {ticket.status !== 'Closed' && (
 //               <div className="p-6 border-t border-gray-200">
 //                 <div className="space-y-4">
 //                   <textarea
