@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { createContext, ReactNode, useContext, useEffect } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { getCurrentUserFn, loginFn, logoutFn, type LoginCredentials } from 'services/Authentication';
+import { getCurrentUserFn, loginFn, logoutFn, type LoginCredentials } from 'services/authentication';
 import { User } from 'types/index';
 
 interface AuthContextType {

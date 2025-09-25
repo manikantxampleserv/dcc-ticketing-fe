@@ -83,6 +83,7 @@ export interface User {
     id: string;
     department_name: string;
   };
+  tickets?: Ticket[];
 }
 
 export interface TicketMerge {
