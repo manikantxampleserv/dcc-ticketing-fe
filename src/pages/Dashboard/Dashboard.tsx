@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Ticket, Clock, CheckCircle, AlertTriangle, TrendingUp, Users, Star, ArrowRight } from 'lucide-react';
 import { dashboardFn, DashboardStats, Ticket as TicketType } from '../../services/Dashboard';
 import { toast } from 'react-hot-toast';
-import urgentIllustration from '../../assets/Urgent-rafiki.svg';
+// import urgentIllustration from '../../assets/Urgent-rafiki.svg';
 import TicketTable from './TicketTable';
 import UrgentTicketCard from './UrgentTickets';
 
@@ -129,22 +129,19 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-md border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Tickets</h2>
           <TicketTable
-            fetchTickets={true}
-            selectedTicketKeys={selectedTicketKeys}
-            setSelectedTicketKeys={setSelectedTicketKeys}
-            setSelected={setSelected}
             setOpen={setOpen}
-            pageSize={5}
-            pagination={null}
-            setPageSize={() => {}}
-            setCurrentPage={() => {}}
+            fetchTickets={true}
+            // pageSize={5}
+            // pagination={null}
+            // setPageSize={() => {}}
+            // setCurrentPage={() => {}}
           />
         </div>
 
         {/* Side Column */}
         <div className="space-y-6">
           {/* Urgent Tickets Card (showing recentTickets data) */}
-          <UrgentTicketCard limit={3} emptyIllustration={urgentIllustration} />
+          <UrgentTicketCard limit={3} />
 
           {/* Performance Card */}
           <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
