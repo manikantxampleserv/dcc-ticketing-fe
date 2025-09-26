@@ -1,38 +1,65 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { format, formatDistanceToNow } from 'date-fns';
 import {
   ArrowLeft,
-  Clock,
-  User,
   Calendar,
-  MessageSquare,
-  Paperclip,
-  Send,
-  Star,
   CheckCircle,
-  AlertTriangle,
-  Play,
-  Pause,
-  Square,
+  Clock,
   Download,
   Eye,
+  File,
   FileText,
   Image,
-  File
+  Pause,
+  Play,
+  Square,
+  Star,
+  User,
+  AlertTriangle
 } from 'lucide-react';
-import { useTickets } from '../context/TicketContext';
-import { formatDistanceToNow, format } from 'date-fns';
 import toast from 'react-hot-toast';
-import TicketActions from '../components/TicketActions';
-import { createCommentFn, ticketFn, updateTicketFn } from 'services/Ticket';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import TicketDetailSkeleton from './Ticket/TicketDetailSkeleton';
-import { TicketComment } from 'types/Tickets';
+import {
+  createCommentFn,
+  createTicketAttachmentFn,
+  mergeTicketFn,
+  ticketFn,
+  ticketsFn,
+  updateTicketActionFn,
+  updateTicketFn
+} from 'services/Ticket';
 import { usersFn } from 'services/users';
+import TicketActions from '../components/TicketActions';
+import { useTickets } from '../context/TicketContext';
+import TicketDetailSkeleton from './Ticket/TicketDetailSkeleton';
 // ✅ Import react-mentions
-import { MentionsInput, Mention } from 'react-mentions';
-import MentionEditor from './TicketComment';
+import { Mention, MentionsInput } from 'react-mentions';
 import { Ticket } from 'types/index';
+import { Timer, TimeSpentTimer } from 'components/TicketTimer';
+
+interface PriorityBadgeProps {
+  priority: string;
+}
+
+const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
+  const colors: Record<string, string> = {
+    High: '!bg-red-100 !text-red-800 !border-red-200',
+    Medium: '!bg-yellow-100 !text-yellow-800 !border-yellow-200',
+    Low: '!bg-green-100 !text-green-800 !border-green-200'
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${
+        colors[priority] || colors.Low
+      }`}
+    >
+      {priority}
+    </span>
+  );
+};
 
 export default function TicketDetail() {
   const { id } = useParams();
@@ -42,11 +69,17 @@ export default function TicketDetail() {
   const [isInternal, setIsInternal] = useState(false);
   const [attachments, setAttachments] = useState<File | null>(null);
   const [searchUser, setSearchUser] = useState('');
+  const [search, setSearch] = useState('');
   // ✅ Add mentions state
+
   const [mentionedUsers, setMentionedUsers] = useState<{ id: string; display: string }[]>([]);
 
   const client = useQueryClient();
   const conversationRef = useRef<HTMLDivElement>(null);
+  const { data: ticketsData } = useQuery({
+    queryKey: ['ticket', search],
+    queryFn: () => ticketsFn({ search: search || '', status: '' })
+  });
 
   const {
     data: TicketDetail,
@@ -65,8 +98,32 @@ export default function TicketDetail() {
       client.refetchQueries({ queryKey: ['tickets'] });
     }
   });
-  const { mutate: updateTicketStatus, isPending: isUpdating } = useMutation({
+
+  const { mutate: createTicketAttachment, isPending: isCreatingAttachment } = useMutation({
+    mutationFn: createTicketAttachmentFn,
+    onSuccess: (res: any) => {
+      toast.success(res.data?.message || 'Send comment successfully!');
+      client.refetchQueries({ queryKey: ['tickets'] });
+    }
+  });
+  const { mutate: updateTicketProgress, isPending: isUpdatingProgress } = useMutation({
     mutationFn: updateTicketFn,
+    onSuccess: (response: any) => {
+      // toast.success(response.message || 'Ticket updated successfully!');
+      client.refetchQueries({ queryKey: ['tickets-update'] });
+      refetch();
+    }
+  });
+  const { mutate: updateTicketStatus, isPending: isUpdating } = useMutation({
+    mutationFn: updateTicketActionFn,
+    onSuccess: (response: any) => {
+      toast.success(response.message || 'Ticket updated successfully!');
+      client.refetchQueries({ queryKey: ['tickets-update'] });
+      refetch();
+    }
+  });
+  const { mutate: mergeTicketStatus, isPending: isUpdatingMerge } = useMutation({
+    mutationFn: mergeTicketFn,
     onSuccess: (response: any) => {
       toast.success(response.message || 'Ticket updated successfully!');
       client.refetchQueries({ queryKey: ['tickets-update'] });
@@ -208,20 +265,28 @@ export default function TicketDetail() {
 
   const handleAllocateTicket = (ticketId: number, userId: number, reason?: string) => {
     console.log('Allocating ticket:', ticketId, 'to user:', userId, 'reason:', reason);
-    updateTicketStatus({ id: ticketId, assigned_agent_id: Number(userId) });
+    updateTicketStatus({ id: ticketId, assigned_agent_id: Number(userId), action: 'Allocate', reason });
   };
 
   const handleMergeTickets = (parentTicketId: number, childTicketId: number, reason: string) => {
     console.log('Merging tickets:', parentTicketId, childTicketId, 'reason:', reason);
+    mergeTicketStatus({ id: childTicketId, parent_id: parentTicketId, reason: reason });
   };
 
   const handleReopenTicket = (ticketId: number, reason: string) => {
     console.log('Reopening ticket:', ticketId, 'reason:', reason);
-    updateTicketStatus({ id: ticketId, status: 'Open', reopen_count: ticket?.reopen_count + 1 });
+    updateTicketStatus({
+      id: ticketId,
+      status: 'Open',
+      reopen_count: ticket?.reopen_count + 1,
+      last_reopened_at: `${new Date().toISOString()}`,
+      action: 'ReOpen'
+    });
   };
 
-  const handleAddAttachment = (ticketId: string, file: File, isPublic: boolean) => {
+  const handleAddAttachment = (ticketId: number, fileName: string, file: File, isPublic: boolean) => {
     console.log('Adding attachment to ticket:', ticketId, 'file:', file.name, 'public:', isPublic);
+    createTicketAttachment({ ticket_id: ticketId, file_name: fileName, file_path: file, is_public: isPublic });
   };
 
   const handleStatusChange = (newStatus: string) => {
@@ -229,11 +294,10 @@ export default function TicketDetail() {
       ...ticket,
       status: newStatus as any,
       updatedAt: new Date().toISOString(),
-      ...(newStatus === 'resolved' && { resolvedAt: new Date().toISOString() }),
-      ...(newStatus === 'Closed' && { ClosedAt: new Date().toISOString() })
+      ...(newStatus === 'Resolved' && { resolved_at: new Date().toISOString() }),
+      ...(newStatus === 'Closed' && { closed_at: new Date().toISOString() })
     };
-    updateTicket(updatedTicket);
-    toast.success(`Ticket ${newStatus}`);
+    updateTicketProgress(updatedTicket);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -370,12 +434,14 @@ export default function TicketDetail() {
     switch (status) {
       case 'Open':
         return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'in-progress':
+      case 'In Progress':
         return 'text-orange-600 bg-orange-50 border-orange-200';
       case 'Resolved':
         return 'text-green-600 bg-green-50 border-green-200';
       case 'Closed':
         return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'Merged':
+        return 'text-purple-600 bg-purple-50 border-purple-200';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
     }
@@ -409,20 +475,31 @@ export default function TicketDetail() {
         </div>
 
         <div className="flex items-center space-x-3">
-          {ticket?.status !== 'Closed' && (
+          {ticket?.status === 'Closed' && ticket?.status === 'Merged' && (
+            <TimeSpentTimer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} />
+          )}
+          {ticket?.status !== 'Closed' && ticket?.status !== 'Merged' && (
             <>
               {ticket?.status === 'Open' && (
-                <button
-                  onClick={() => handleStatusChange('in-progress')}
-                  className="flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Work
-                </button>
+                <>
+                  <TimeSpentTimer
+                    workStartedAt={ticket.start_timer_at!}
+                    time_spent_minutes={ticket?.time_spent_minutes}
+                  />
+                  <button
+                    onClick={() => handleStatusChange('In Progress')}
+                    className="flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Start Work
+                  </button>
+                </>
               )}
 
               {ticket?.status === 'In Progress' && (
                 <>
+                  <Timer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} />
+
                   <button
                     onClick={() => handleStatusChange('Open')}
                     className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -441,13 +518,19 @@ export default function TicketDetail() {
               )}
 
               {ticket?.status === 'Resolved' && (
-                <button
-                  onClick={() => handleStatusChange('Closed')}
-                  className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  <Square className="h-4 w-4 mr-2" />
-                  Close
-                </button>
+                <>
+                  <TimeSpentTimer
+                    workStartedAt={ticket.start_timer_at!}
+                    time_spent_minutes={ticket?.time_spent_minutes}
+                  />
+                  <button
+                    onClick={() => handleStatusChange('Closed')}
+                    className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    <Square className="h-4 w-4 mr-2" />
+                    Close
+                  </button>
+                </>
               )}
             </>
           )}
@@ -510,7 +593,7 @@ export default function TicketDetail() {
           {/* Responses */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {/* Reply Section */}
-            {ticket.status !== 'Closed' && (
+            {ticket.status !== 'Closed' && ticket.status !== 'Merged' && (
               <div className="p-4 border-t">
                 <MentionsInput
                   value={newMessage}
@@ -734,11 +817,63 @@ export default function TicketDetail() {
             onMergeTickets={handleMergeTickets}
             onReopenTicket={handleReopenTicket}
             onAddAttachment={handleAddAttachment}
-            availableTickets={state?.tickets?.filter((t: any) => t?.id !== ticket?.id) || []}
+            availableTickets={ticketsData?.data || []}
             searchUser={searchUser}
             setSearchUser={setSearchUser}
           />
+          {/* Merged Info */}
+          {(ticket?.child_tickets?.length || ticket?.parent_ticket) && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Merged Tickets</h3>
 
+              <div className="space-y-2">
+                {/* Parent Ticket Info */}
+                {ticket?.parent_ticket && (
+                  <div>
+                    <h3 className="font-medium text-indigo-900 mb-1">Parent Ticket</h3>
+                    <div
+                      onClick={() => navigate(`/tickets/${ticket?.parent_ticket?.id}`)}
+                      className="bg-gradient-to-r from-indigo-50 hover:from-indigo-100 hover:cursor-pointer to-blue-50 border border-indigo-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-1">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-gray-900">{ticket?.parent_ticket?.ticket_number}</span>
+                              <PriorityBadge priority={ticket?.parent_ticket?.priority} />
+                            </div>
+                            <p className="text-gray-700 text-wrap text-sm">{ticket?.parent_ticket?.subject}</p>
+                            <p className="text-gray-700 text-wrap text-sm">Status : {ticket?.parent_ticket?.status}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <h3 className="font-medium text-indigo-900 mb-1">Child Ticket</h3>
+
+                {ticket?.child_tickets?.map((item: Ticket) => (
+                  <div
+                    onClick={() => navigate(`/tickets/${item?.id}`)}
+                    className="bg-gradient-to-r from-lime-50 hover:from-lime-100 hover:cursor-pointer to-yellow-50 border border-indigo-200 rounded-lg p-4"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-1">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-900">{item?.ticket_number}</span>
+                            <PriorityBadge priority={item?.priority} />
+                          </div>
+                          <p className="text-gray-700 text-wrap text-sm">{item?.subject}</p>
+                          <p className="text-gray-700 text-wrap text-sm">Status : {item?.status}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Ticket Info */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Ticket Information</h3>
@@ -783,16 +918,18 @@ export default function TicketDetail() {
               <div>
                 <label className="text-sm font-medium text-gray-500">Assigned To</label>
                 <div className="mt-1">
-                  {ticket?.assigned_by ? (
+                  {ticket?.agents_user ? (
                     <div className="flex items-center">
-                      {ticket?.assigned_by?.avatar && (
+                      {ticket?.agents_user?.avatar && (
                         <img
-                          src={ticket?.assigned_by?.avatar}
-                          alt={ticket?.assigned_by?.name}
+                          src={ticket?.agents_user?.avatar}
+                          alt={ticket?.agents_user?.first_name + ' ' + ticket?.agents_user?.last_name}
                           className="h-6 w-6 rounded-full mr-2"
                         />
                       )}
-                      <span className="text-sm text-gray-900">{ticket?.assigned_by?.name}</span>
+                      <span className="text-sm text-gray-900">
+                        {ticket?.agents_user?.first_name + ' ' + ticket?.agents_user?.last_name}
+                      </span>
                     </div>
                   ) : (
                     <span className="text-sm text-gray-500">Unassigned</span>
@@ -803,7 +940,7 @@ export default function TicketDetail() {
               <div>
                 <label className="text-sm font-medium text-gray-500">Source</label>
                 <div className="mt-1 flex items-center">
-                  <span className="text-sm text-gray-900">{ticket?.source}</span>
+                  <span className="text-sm capitalize text-gray-900">{ticket?.source}</span>
                 </div>
               </div>
 
@@ -1096,7 +1233,7 @@ export default function TicketDetail() {
 //     //   ...ticket,
 //     //   responses: [...ticket.responses, newResponse],
 //     //   updatedAt: new Date().toISOString(),
-//     //   ...(ticket.status === 'Open' && { status: 'in-progress' as const })
+//     //   ...(ticket.status === 'Open' && { status: 'In Progress' as const })
 //     // };
 
 //     const formData = new FormData();
@@ -1148,7 +1285,7 @@ export default function TicketDetail() {
 //     switch (status) {
 //       case 'Open':
 //         return 'text-blue-600 bg-blue-50 border-blue-200';
-//       case 'in-progress':
+//       case 'In Progress':
 //         return 'text-orange-600 bg-orange-50 border-orange-200';
 //       case 'Resolved':
 //         return 'text-green-600 bg-green-50 border-green-200';
@@ -1191,7 +1328,7 @@ export default function TicketDetail() {
 //             <>
 //               {ticket?.status === 'Open' && (
 //                 <button
-//                   onClick={() => handleStatusChange('in-progress')}
+//                   onClick={() => handleStatusChange('In Progress')}
 //                   className="flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
 //                 >
 //                   <Play className="h-4 w-4 mr-2" />

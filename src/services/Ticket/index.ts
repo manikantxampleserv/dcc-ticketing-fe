@@ -2,7 +2,7 @@
  * Service for interacting with tickets API
  */
 import axiosInstance from 'configs/axios';
-import { Ticket, TicketComment } from 'types/Tickets';
+import { Ticket, TicketAttachment, TicketComment } from 'types/Tickets';
 import withToast from 'utils/withToast';
 
 /**
@@ -50,6 +50,19 @@ export const createTicketFn = async (body: Ticket) => {
     throw error;
   }
 };
+export const createTicketAttachmentFn = async (body: Partial<TicketAttachment>) => {
+  const formData = new FormData();
+  formData.append('ticket_id', String(body.ticket_id));
+  formData.append('file_name', String(body.file_name));
+  formData.append('file_path', body?.file_path);
+  formData.append('is_public', body?.is_public);
+  try {
+    const response = await withToast(() => axiosInstance.post('/ticket-attachment', formData));
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 export const createCommentFn = async (body: any) => {
   try {
     const response = await withToast(() => axiosInstance.post('/ticket-comment', body));
@@ -68,6 +81,24 @@ export const updateTicketFn = async (body: Partial<Ticket>) => {
   try {
     const { id, ...datas } = body;
     const response = await withToast(() => axiosInstance.put(`/ticket/${id}`, { ...datas }));
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const updateTicketActionFn = async (body: Partial<Ticket>) => {
+  try {
+    const { id, ...datas } = body;
+    const response = await withToast(() => axiosInstance.put(`/ticket-action/${id}`, { ...datas }));
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+export const mergeTicketFn = async (body: Partial<Ticket>) => {
+  try {
+    const { id, ...datas } = body;
+    const response = await withToast(() => axiosInstance.put(`/ticket-merge/${id}`, { ...datas }));
     return response.data;
   } catch (error) {
     throw error;

@@ -248,7 +248,7 @@ export interface Ticket {
   subject: string;
   description: string;
   priority: 'Low' | 'Medium' | 'High';
-  status: 'Open' | 'In Progress' | 'Closed' | 'closed' | 'resolved';
+  status: 'Open' | 'In Progress' | 'Closed' | 'closed' | 'Resolved' | 'Merged';
   source?: string;
   sla_deadline?: string | null;
   sla_status?: string | null;
