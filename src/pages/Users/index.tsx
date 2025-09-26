@@ -1,6 +1,6 @@
 import { Avatar, Button, Chip, IconButton, Input, Option, Select, Stack, Typography } from '@mui/joy';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
+import { Edit, Plus, Search, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { deleteUserFn, usersFn } from 'services/users';
@@ -177,17 +177,7 @@ const UserManagement = () => {
           >
             <Edit size={16} />
           </IconButton>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color={record.is_active ? 'danger' : 'success'}
-            onClick={e => {
-              e.stopPropagation();
-              handleToggleUserStatus(record);
-            }}
-          >
-            {record.is_active ? <UserX size={16} /> : <UserCheck size={16} />}
-          </IconButton>
+
           <PopConfirm
             title="Delete User"
             description={`Are you sure you want to delete ${record.first_name} ${record.last_name}?`}
