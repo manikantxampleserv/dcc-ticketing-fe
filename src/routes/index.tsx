@@ -5,7 +5,7 @@ import SharedTicketViews from 'components/SharedTicketViews';
 import { AuthProvider } from 'context/AuthContext';
 import Analytics from 'pages/Analytics';
 import CustomerManagement from 'pages/Customers';
-import Dashboard from 'pages/Dashboard';
+// import Dashboard from 'pages/Dashboard';
 import Login from 'pages/Login';
 import Settings from 'pages/Settings';
 import UserProfile from 'pages/UserProfile';
@@ -22,7 +22,8 @@ import RolesManagement from 'pages/Roles';
 import SystemSettingsManagement from 'pages/SystemSetting';
 import { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import AgentsManagement from 'pages/Agents';
+import Dashboard from 'pages/Dashboard/Dashboard';
+// import AgentsManagement from 'pages/Agents';
 
 interface RouteType {
   path: string;
@@ -55,13 +56,13 @@ const routes: RouteType[] = [
     status: true,
     requiresAuth: true
   },
-  {
-    path: '/dashboard',
-    element: <Dashboard />,
-    title: 'Dashboard',
-    status: true,
-    requiresAuth: true
-  },
+  // {
+  //   path: '/dashboard',
+  //   element: <Dashboard />,
+  //   title: 'Dashboard',
+  //   status: true,
+  //   requiresAuth: true
+  // },
   // {
   //   path: '/tickets',
   //   element: <Tickets />,
@@ -154,13 +155,13 @@ const routes: RouteType[] = [
     status: true,
     requiresAuth: true
   },
-  {
-    path: '/agents', // match the href from sidebar
-    element: <AgentsManagement />, // component to render
-    title: 'Agent Management', // page title
-    status: true, // active route
-    requiresAuth: true // route protected
-  },
+  // {
+  //   path: '/agents', // match the href from sidebar
+  //   element: <AgentsManagement />, // component to render
+  //   title: 'Agent Management', // page title
+  //   status: true, // active route
+  //   requiresAuth: true // route protected
+  // },
   {
     path: '/escalations',
     element: (
