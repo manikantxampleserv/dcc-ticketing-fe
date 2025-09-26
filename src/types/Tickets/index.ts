@@ -28,6 +28,9 @@ export interface Ticket {
   updated_at: string;
   ticket_id: number;
   comment_text: string;
+  parent_id: number;
+  reason: string;
+  action: string;
 }
 
 export interface TicketComment {
@@ -43,6 +46,21 @@ export interface TicketComment {
   comment_type: string;
   email_message_id: string;
   attachment_urls?: string | null;
+}
+export interface TicketAttachment {
+  ticket_id: number;
+  response_id: number;
+  file_name: string;
+  original_file_name: string;
+  file_path: any;
+  file_size: number;
+  content_type: string;
+  file_hash: string;
+  uploaded_by: number;
+  uploaded_by_type: string;
+  is_public: boolean;
+  virus_scanned: boolean;
+  scan_result: string;
 }
 
 // ✅ sirf create ke liye

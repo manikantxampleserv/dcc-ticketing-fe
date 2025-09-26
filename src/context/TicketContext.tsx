@@ -136,12 +136,12 @@ export function TicketProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_STATS', payload: stats });
   };
 
-  useEffect(() => {
-    // Initialize with mock data
-    dispatch({ type: 'SET_TICKETS', payload: mockTickets });
-    dispatch({ type: 'SET_AGENTS', payload: mockAgents });
-    dispatch({ type: 'SET_CURRENT_USER', payload: mockAgents[0] });
-  }, []);
+  // useEffect(() => {
+  //   // Initialize with mock data
+  //   dispatch({ type: 'SET_TICKETS', payload: mockTickets });
+  //   dispatch({ type: 'SET_AGENTS', payload: mockAgents });
+  //   dispatch({ type: 'SET_CURRENT_USER', payload: mockAgents[0] });
+  // }, []);
 
   useEffect(() => {
     calculateStats();
