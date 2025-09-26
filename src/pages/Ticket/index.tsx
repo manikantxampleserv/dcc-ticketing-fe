@@ -51,6 +51,32 @@ const TicketManagement = () => {
     deleteTicket({ ids: keys.map(key => Number(key)) });
     setSelectedTicketKeys([]);
   };
+  // const getPriorityColor = (priority: string) => {
+  //   switch (priority) {
+  //     case 'Low':
+  //       return 'bg-green-200 text-green-800'; // soft green background, strong green text
+  //     case 'Medium':
+  //       return 'bg-yellow-200 text-yellow-800'; // soft yellow background, strong yellow text
+  //     case 'High':
+  //       return 'bg-red-200 text-red-800'; // soft red background, strong red text
+  //     default:
+  //       return 'bg-gray-200 text-gray-800';
+  //   }
+  // };
+
+  // Better colors for status
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return 'bg-green-100 text-green-700'; // ✅ Green for active/open
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700'; // ✅ Amber/Yellow for pending
+      case 'closed':
+        return 'bg-slate-200 text-slate-800'; // ✅ Better subtle gray for closed
+      default:
+        return 'bg-gray-100 text-gray-700'; // ✅ Clean neutral fallback
+    }
+  };
 
   const columns: CustomTableColumn<Ticket>[] = [
     {
@@ -89,20 +115,26 @@ const TicketManagement = () => {
       dataIndex: 'assigned_agent_id',
       title: 'ASSIGNED AGENT',
       render: agentId => <Typography>{agentId || '-'}</Typography>
+      // render: text => <Typography level="body-sm">{text?.first_name || '-'}</Typography>
     },
     {
       key: 'status',
       dataIndex: 'status',
       title: 'STATUS',
       sortable: true,
-      render: status => <Typography>{status}</Typography>
+      render: (status: string) => (
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)}`}>{status}</span>
+      )
     },
     {
       key: 'priority',
       dataIndex: 'priority',
       title: 'PRIORITY',
-      render: priority => <Typography>{priority}</Typography>
+      render: (priority: string) => (
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${priority}`}>{priority}</span>
+      )
     },
+
     {
       key: 'actions',
       dataIndex: 'id',
