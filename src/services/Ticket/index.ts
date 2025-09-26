@@ -13,7 +13,13 @@ import withToast from 'utils/withToast';
  * @param {string} [params.search] - search query
  * @returns {Promise<Object>} - response data
  */
-export const ticketsFn = async (params: { page?: number; limit?: number; search?: string; status: string }) => {
+export const ticketsFn = async (params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status: string;
+  priority: string;
+}) => {
   try {
     const response = await axiosInstance.get('/ticket', { params });
     return response.data;
@@ -30,7 +36,6 @@ export const ticketsFn = async (params: { page?: number; limit?: number; search?
 export const ticketFn = async (id: number): Promise<any> => {
   try {
     const response = await axiosInstance.get(`/ticket/${id}`);
-    console.log(response.data);
     return response.data;
   } catch (error) {
     throw error;
@@ -42,7 +47,7 @@ export const ticketFn = async (id: number): Promise<any> => {
  * @param {Ticket} body - ticket data
  * @returns {Promise<Ticket>} - response data
  */
-export const createTicketFn = async (body: Ticket) => {
+export const createTicketFn = async (body: Partial<Ticket>) => {
   try {
     const response = await withToast(() => axiosInstance.post('/ticket', body));
     return response.data;

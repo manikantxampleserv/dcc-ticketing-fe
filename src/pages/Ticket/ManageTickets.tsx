@@ -26,6 +26,7 @@ import { customersFn } from 'services/Customers';
 import { categoriesFn } from 'services/Category';
 import { usersFn } from 'services/users';
 import CustomFilePicker from 'shared/CustomFilePicker';
+
 const validationSchema = Yup.object({
   customer_id: Yup.string().required('Customer is required'),
   subject: Yup.string().required('Subject is required'),
@@ -43,7 +44,7 @@ interface ManageTicketsProps {
 }
 
 const priorities = ['Low', 'Medium', 'High'];
-const statuses = ['Open', 'Pending', 'Closed'];
+const statuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
 const sources = ['Email', 'Phone', 'Chat', 'Web'];
 const slaStatuses = ['met', 'breached', 'pending'];
 const tagsList = ['Bug', 'Feature', 'Urgent', 'Customer', 'Backend', 'UI']; // example tags
@@ -105,13 +106,13 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
       category_id: selected?.category_id || '',
       subject: selected?.subject || '',
       description: selected?.description || '',
-      priority: selected?.priority || 'medium',
-      status: selected?.status || 'open',
-      source: selected?.source || 'email',
+      priority: selected?.priority || 'Medium',
+      status: selected?.status || 'Open',
+      source: selected?.source || 'Email',
       sla_deadline: selected?.sla_deadline || null,
       sla_status: selected?.sla_status || 'pending',
       time_spent_minutes: selected?.time_spent_minutes || 0,
-      tags: selected?.tags || [],
+      tags: selected?.tags ? JSON.parse(selected?.tags) : [],
       merged_into_ticket_id: selected?.merged_into_ticket_id || null
     }),
     [selected]
@@ -124,10 +125,10 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
     validationSchema,
     onSubmit: values => {
       const payload = {
-        customer_id: values.customer_id,
+        customer_id: Number(values.customer_id),
         subject: values.subject,
-        category_id: values.category_id,
-        assigned_agent_id: values.assigned_agent_id || null,
+        category_id: Number(values.category_id),
+        assigned_agent_id: Number(values.assigned_agent_id) || null,
         status: values.status,
         priority: values.priority,
         source: values.source,
@@ -135,7 +136,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
         sla_status: values.sla_status,
         time_spent_minutes: values.time_spent_minutes,
         tags: Array.isArray(values.tags) ? JSON.stringify(values.tags) : values.tags,
-        merged_into_ticket_id: values.merged_into_ticket_id,
+        merged_into_ticket_id: Number(values.merged_into_ticket_id) || null,
         attachment_urls: values.attachment_urls,
         description: values.description
       };
@@ -143,6 +144,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
       else createTicket(payload);
     }
   });
+  console.log('Valuessss : ', typeof formik.values['tags'], formik.values['tags']);
 
   // Properly reset on modal close
   const handleModalClose = () => {
@@ -245,7 +247,14 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
                 </Option>
               ))}
             </CustomSelect>
-            <CustomInput label="Time Spent (minutes)" type="number" name="time_spent_minutes" formik={formik} />
+            <CustomInput
+              disabled={true}
+              value={formik.values.time_spent_minutes / 60}
+              label="Time Spent (minutes)"
+              type="number"
+              name="time_spent_minutes"
+              formik={formik}
+            />
             {/* Tags multi-select */}
             <FormControl>
               <FormLabel>Tags</FormLabel>
@@ -262,14 +271,14 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
                 ))}
               </Select>
             </FormControl>
-            <CustomSelect
+            {/* <CustomSelect
               label="Merge Into Ticket"
               name="merged_into_ticket_id"
               formik={formik}
               placeholder="Select ticket"
             >
               <Option value="">None</Option>
-            </CustomSelect>
+            </CustomSelect> */}
           </div>
           <FormControl>
             <FormLabel>Description</FormLabel>

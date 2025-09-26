@@ -9,6 +9,7 @@ import CustomInput from 'shared/CustomInput';
 import CustomRadioInput from 'shared/CustomRadioInput';
 import CustomSelect from 'shared/CustomSelect';
 import { Customer } from 'types/Customers';
+import { boolean } from 'yup';
 
 const ManageCustomers: React.FC<{
   open: boolean;
@@ -65,10 +66,15 @@ const ManageCustomers: React.FC<{
     initialValues,
     enableReinitialize: true,
     onSubmit: values => {
+      const processedValues = {
+        ...values,
+        is_active: Boolean(values.is_active === 'true' || values.is_active === true)
+      };
+
       if (isEdit) {
-        updateCustomer({ ...values, id: selected?.id } as unknown as Customer);
+        updateCustomer({ ...processedValues, id: selected?.id } as Customer);
       } else {
-        createCustomer(values as unknown as Customer);
+        createCustomer(processedValues as Customer);
       }
     }
   });

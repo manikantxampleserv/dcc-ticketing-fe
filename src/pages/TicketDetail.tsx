@@ -38,6 +38,7 @@ import TicketDetailSkeleton from './Ticket/TicketDetailSkeleton';
 import { Mention, MentionsInput } from 'react-mentions';
 import { Ticket } from 'types/index';
 import { Timer, TimeSpentTimer } from 'components/TicketTimer';
+import { RemarkModal } from 'components/TicketStatusModal';
 
 interface PriorityBadgeProps {
   priority: string;
@@ -64,7 +65,9 @@ const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
 export default function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state, updateTicket } = useTickets();
+  // const { state, updateTicket } = useTickets();
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [attachments, setAttachments] = useState<File | null>(null);
@@ -78,12 +81,13 @@ export default function TicketDetail() {
   const conversationRef = useRef<HTMLDivElement>(null);
   const { data: ticketsData } = useQuery({
     queryKey: ['ticket', search],
-    queryFn: () => ticketsFn({ search: search || '', status: '' })
+    queryFn: () => ticketsFn({ search: search || '', status: '', priority: '' })
   });
 
   const {
     data: TicketDetail,
     isLoading,
+    isFetching,
     refetch
   } = useQuery({
     queryKey: ['tickets-details', id],
@@ -95,7 +99,7 @@ export default function TicketDetail() {
     mutationFn: createCommentFn,
     onSuccess: (res: any) => {
       toast.success(res.data?.message || 'Send comment successfully!');
-      client.refetchQueries({ queryKey: ['tickets'] });
+      client.refetchQueries({ queryKey: ['tickets-details'] });
     }
   });
 
@@ -103,33 +107,34 @@ export default function TicketDetail() {
     mutationFn: createTicketAttachmentFn,
     onSuccess: (res: any) => {
       toast.success(res.data?.message || 'Send comment successfully!');
-      client.refetchQueries({ queryKey: ['tickets'] });
+      client.refetchQueries({ queryKey: ['tickets-details'] });
     }
   });
   const { mutate: updateTicketProgress, isPending: isUpdatingProgress } = useMutation({
     mutationFn: updateTicketFn,
     onSuccess: (response: any) => {
       // toast.success(response.message || 'Ticket updated successfully!');
-      client.refetchQueries({ queryKey: ['tickets-update'] });
-      refetch();
+      client.invalidateQueries({ queryKey: ['tickets-details', id] });
+      // refetch();
     }
   });
   const { mutate: updateTicketStatus, isPending: isUpdating } = useMutation({
     mutationFn: updateTicketActionFn,
     onSuccess: (response: any) => {
       toast.success(response.message || 'Ticket updated successfully!');
-      client.refetchQueries({ queryKey: ['tickets-update'] });
-      refetch();
+      client.refetchQueries({ queryKey: ['tickets-details'] });
+      // refetch();
     }
   });
   const { mutate: mergeTicketStatus, isPending: isUpdatingMerge } = useMutation({
     mutationFn: mergeTicketFn,
     onSuccess: (response: any) => {
       toast.success(response.message || 'Ticket updated successfully!');
-      client.refetchQueries({ queryKey: ['tickets-update'] });
-      refetch();
+      client.refetchQueries({ queryKey: ['tickets-details'] });
+      // refetch();
     }
   });
+  console.log('is Loading : ', isFetching, isUpdatingProgress);
 
   const { data: usersData, isLoading: isLoadingUser } = useQuery({
     queryKey: ['users', searchUser],
@@ -280,7 +285,8 @@ export default function TicketDetail() {
       status: 'Open',
       reopen_count: ticket?.reopen_count + 1,
       last_reopened_at: `${new Date().toISOString()}`,
-      action: 'ReOpen'
+      action: 'ReOpen',
+      reason
     });
   };
 
@@ -289,11 +295,21 @@ export default function TicketDetail() {
     createTicketAttachment({ ticket_id: ticketId, file_name: fileName, file_path: file, is_public: isPublic });
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleResolveWithRemark = (remark: string) => {
+    handleStatusChange('Resolved', remark);
+    setShowResolveModal(false);
+  };
+
+  const handleCloseWithRemark = (remark: string) => {
+    handleStatusChange('Closed', remark);
+    setShowCloseModal(false);
+  };
+  const handleStatusChange = (newStatus: string, remark: string) => {
     const updatedTicket = {
       ...ticket,
       status: newStatus as any,
       updatedAt: new Date().toISOString(),
+      ...(remark && { reason: remark }),
       ...(newStatus === 'Resolved' && { resolved_at: new Date().toISOString() }),
       ...(newStatus === 'Closed' && { closed_at: new Date().toISOString() })
     };
@@ -460,6 +476,11 @@ export default function TicketDetail() {
     }
   };
 
+  const totalSeconds = ticket?.time_spent_minutes || 0;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -487,8 +508,11 @@ export default function TicketDetail() {
                     time_spent_minutes={ticket?.time_spent_minutes}
                   />
                   <button
-                    onClick={() => handleStatusChange('In Progress')}
-                    className="flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                    disabled={isUpdatingProgress || isFetching}
+                    onClick={() => handleStatusChange('In Progress', '')}
+                    className={`flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg ${
+                      (isUpdatingProgress || isFetching) && 'bg-orange-400 hover:bg-orange-400 cursor-wait'
+                    } hover:bg-orange-700 transition-colors`}
                   >
                     <Play className="h-4 w-4 mr-2" />
                     Start Work
@@ -501,15 +525,22 @@ export default function TicketDetail() {
                   <Timer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} />
 
                   <button
-                    onClick={() => handleStatusChange('Open')}
-                    className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    disabled={isUpdatingProgress || isFetching}
+                    onClick={() => handleStatusChange('Open', '')}
+                    className={`flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ${
+                      (isUpdatingProgress || isFetching) && 'bg-gray-400 hover:bg-gray-400 cursor-wait'
+                    }`}
                   >
                     <Pause className="h-4 w-4 mr-2" />
                     Pause
                   </button>
                   <button
-                    onClick={() => handleStatusChange('Resolved')}
-                    className="flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    disabled={isUpdatingProgress || isFetching}
+                    // onClick={() => handleStatusChange('Resolved')}
+                    onClick={() => setShowResolveModal(true)}
+                    className={`flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors ${
+                      (isUpdatingProgress || isFetching) && 'bg-green-400 hover:bg-green-400 cursor-wait'
+                    }`}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Resolve
@@ -524,8 +555,12 @@ export default function TicketDetail() {
                     time_spent_minutes={ticket?.time_spent_minutes}
                   />
                   <button
-                    onClick={() => handleStatusChange('Closed')}
-                    className="flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    disabled={isUpdatingProgress || isFetching}
+                    // onClick={() => handleStatusChange('Closed')}
+                    onClick={() => setShowCloseModal(true)}
+                    className={`flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ${
+                      (isUpdatingProgress || isFetching) && 'bg-gray-400 hover:bg-gray-400 cursor-wait'
+                    }`}
                   >
                     <Square className="h-4 w-4 mr-2" />
                     Close
@@ -654,6 +689,25 @@ export default function TicketDetail() {
                 </div>
               </div>
             )}
+            {/* Resolve Modal */}
+            <RemarkModal
+              isOpen={showResolveModal}
+              onClose={() => setShowResolveModal(false)}
+              onSubmit={handleResolveWithRemark}
+              title="Resolve Ticket"
+              actionText="Resolve"
+              isLoading={isUpdatingProgress}
+            />
+
+            {/* Close Modal */}
+            <RemarkModal
+              isOpen={showCloseModal}
+              onClose={() => setShowCloseModal(false)}
+              onSubmit={handleCloseWithRemark}
+              title="Close Ticket"
+              actionText="Close"
+              isLoading={isUpdatingProgress}
+            />
             {/* <MentionEditor
               newMessage={newMessage}
               onChangeHandler={onChangeHandler}
@@ -948,9 +1002,7 @@ export default function TicketDetail() {
                 <label className="text-sm font-medium text-gray-500">Time Spent</label>
                 <div className="mt-1 flex items-center">
                   <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                  <span className="text-sm text-gray-900">
-                    {Math.floor((ticket?.time_spent_minutes || 0) / 60)}h {(ticket?.time_spent_minutes || 0) % 60}m
-                  </span>
+                  <span className="text-sm text-gray-900">{`${hours}h ${minutes}m ${seconds}s`}</span>
                 </div>
               </div>
 

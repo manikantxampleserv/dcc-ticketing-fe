@@ -58,7 +58,7 @@ export interface TicketAttachment {
   file_hash: string;
   uploaded_by: number;
   uploaded_by_type: string;
-  is_public: boolean;
+  is_public: any;
   virus_scanned: boolean;
   scan_result: string;
 }

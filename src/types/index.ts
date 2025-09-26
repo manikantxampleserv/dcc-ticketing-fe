@@ -258,18 +258,22 @@ export interface Ticket {
   closed_at?: string | null;
   assigned_by?: number;
   is_merged?: boolean;
-
+  attachment_urls: string;
   reopen_count?: number;
   time_spent_minutes?: number;
   last_reopened_at?: string | null;
   customer_satisfaction_rating?: number | null;
   customer_feedback?: string | null;
-  tags?: string;
+  tags?: any;
   merged_into_ticket_id?: number | null;
   created_at: string;
   updated_at: string;
   users?: Record<string, any>; // you can expand this if you have a proper User type
   customers?: {
+    id: number;
+    [key: string]: any;
+  };
+  agents_user?: {
     id: number;
     [key: string]: any;
   };

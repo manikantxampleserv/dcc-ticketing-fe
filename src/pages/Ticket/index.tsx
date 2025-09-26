@@ -5,12 +5,12 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { deleteTicketFn, ticketsFn } from '../../services/Ticket';
 import CustomTable, { CustomTableColumn } from 'shared/CustomTable';
-import ManageTickets from './ManageTicket';
 import PopConfirm from 'components/PopConfirm';
 import { Ticket } from 'types';
 
-const statuses = ['open', 'pending', 'closed'];
+const statuses = ['Open', 'In Progress', 'Closed', 'Merged', 'Resolved'];
 import { Link } from 'react-router-dom';
+import ManageTickets from './ManageTickets.tsx';
 
 const TicketManagement = () => {
   const [search, setSearch] = useState('');
@@ -30,7 +30,8 @@ const TicketManagement = () => {
         page: currentPage,
         limit: pageSize,
         search: search || undefined,
-        status: statusFilter !== 'all' ? statusFilter : ''
+        status: statusFilter !== 'all' ? statusFilter : '',
+        priority: ''
       })
   });
 
@@ -66,12 +67,14 @@ const TicketManagement = () => {
 
   // Better colors for status
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'open':
+    switch (status) {
+      case 'Open':
         return 'bg-green-100 text-green-700'; // ✅ Green for active/open
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-700'; // ✅ Amber/Yellow for pending
-      case 'closed':
+      case 'In Progress':
+        return 'bg-blue-100 text-blue-700'; // ✅ Amber/Yellow for pending
+      case 'Merged':
+        return 'bg-purple-100 text-purple-700'; // ✅ Amber/Yellow for pending
+      case 'Closed':
         return 'bg-slate-200 text-slate-800'; // ✅ Better subtle gray for closed
       default:
         return 'bg-gray-100 text-gray-700'; // ✅ Clean neutral fallback
@@ -85,8 +88,11 @@ const TicketManagement = () => {
       title: 'TICKET NO',
       sortable: true,
       render: (ticket_number: string, record: Ticket) => (
-        <Link to={`/tickets/${record?.id}`}>
-          <Typography level="body-sm" fontWeight="md">
+        <Link
+          className="hover:text-red-600  hover:underline underline-offset-2 hover:cursor-pointer"
+          to={`/tickets/${record?.id}`}
+        >
+          <Typography className="hover:text-red-600 " level="body-sm" fontWeight="md">
             {ticket_number}
           </Typography>
         </Link>
@@ -97,7 +103,7 @@ const TicketManagement = () => {
       dataIndex: 'subject',
       title: 'SUBJECT',
       sortable: true,
-      render: (_, record) => <Typography>{record.subject}</Typography>
+      render: (_, record) => <Typography className="capitalize">{record.subject}</Typography>
     },
     {
       key: 'customer',
@@ -112,9 +118,9 @@ const TicketManagement = () => {
 
     {
       key: 'assigned_agent_id',
-      dataIndex: 'assigned_agent_id',
+      dataIndex: 'agents_user',
       title: 'ASSIGNED AGENT',
-      render: agentId => <Typography>{agentId || '-'}</Typography>
+      render: agentId => <Typography>{agentId?.first_name + ' ' + agentId?.last_name || '-'}</Typography>
       // render: text => <Typography level="body-sm">{text?.first_name || '-'}</Typography>
     },
     {
@@ -198,7 +204,12 @@ const TicketManagement = () => {
           onChange={e => setSearch(e.target.value)}
           sx={{ width: '320px' }}
         />
-        <Select value={statusFilter} onChange={(_, value) => setStatusFilter(value || 'all')} sx={{ width: '220px' }}>
+        <Select
+          value={statusFilter}
+          placeholder="Select Status"
+          onChange={(_, value) => setStatusFilter(value || 'all')}
+          sx={{ width: '220px' }}
+        >
           <Option value="all">All Statuses</Option>
           {statuses.map(s => (
             <Option key={s} value={s}>
