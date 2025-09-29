@@ -1,17 +1,18 @@
 export interface Ticket {
   id: number;
-  attachment_urls?: string[]; // Array of attachment URLs
+  attachment_urls?: any; // Array of attachment URLs
   ticket_number: string;
   customer_id: number;
   assigned_agent_id?: number | null;
   category_id?: number | null;
   subject: string;
   description: string;
-  priority: 'Low' | 'Medium' | 'High';
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+  priority: number;
+  // priority: 'Low' | 'Medium' | 'High';
+  status: 'Open' | 'In Progress' | 'Closed' | 'Resolved' | 'Merged';
   source?: string | null;
   sla_deadline?: string | null;
-  sla_status?: 'Within' | 'Breached' | null;
+  sla_status?: 'Within' | 'Breached' | 'Met' | null;
   first_response_at?: string | null;
   resolved_at?: string | null;
   closed_at?: string | null;

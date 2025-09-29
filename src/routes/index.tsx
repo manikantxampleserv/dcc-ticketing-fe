@@ -23,6 +23,7 @@ import SystemSettingsManagement from 'pages/SystemSetting';
 import { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from 'pages/Dashboard/Dashboard';
+import SLAConfigurations from 'pages/SLAConfiguration';
 // import AgentsManagement from 'pages/Agents';
 
 interface RouteType {
@@ -119,6 +120,13 @@ const routes: RouteType[] = [
     status: true,
     requiresAuth: true,
     icon: 'Settings'
+  },
+  {
+    path: '/sla-rules',
+    element: <SLAConfigurations />,
+    title: 'SLA Rules',
+    status: true,
+    requiresAuth: true
   },
   {
     path: '/users',

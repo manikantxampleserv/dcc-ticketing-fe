@@ -9,7 +9,8 @@ import {
   UserCog,
   Building,
   FolderTree,
-  Building2
+  Building2,
+  Clock
 } from 'lucide-react';
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -25,6 +26,7 @@ const navigation = [
   // { name: 'Team Views', href: '/team-views', icon: Eye },
   // { name: 'Escalations', href: '/escalations', icon: AlertTriangle },
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'SLA Rules', href: '/sla-rules', icon: Clock },
   { name: 'Roles', href: '/roles', icon: UserCog },
   { name: 'Department', href: '/department', icon: Building },
   { name: 'Categories', href: '/categories', icon: FolderTree },

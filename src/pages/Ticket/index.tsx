@@ -48,8 +48,9 @@ const TicketManagement = () => {
   });
 
   const handleDeleteTicket = (ticket: Ticket) => deleteTicket({ ids: [Number(ticket.id)] });
-  const handleDeleteSelected = (keys: React.Key[]) => {
-    deleteTicket({ ids: keys.map(key => Number(key)) });
+  console.log('IIII : ', selectedTicketKeys);
+  const handleDeleteSelected = async (keys: React.Key[]) => {
+    await deleteTicket({ ids: keys.map(key => Number(key)) });
     setSelectedTicketKeys([]);
   };
   // const getPriorityColor = (priority: string) => {
@@ -134,10 +135,10 @@ const TicketManagement = () => {
     },
     {
       key: 'priority',
-      dataIndex: 'priority',
+      dataIndex: 'sla_priority',
       title: 'PRIORITY',
-      render: (priority: string) => (
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${priority}`}>{priority}</span>
+      render: (priority: any) => (
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${priority?.priority}`}>{priority?.priority}</span>
       )
     },
 
@@ -232,23 +233,26 @@ const TicketManagement = () => {
         toolbar={{
           title: `Tickets (${pagination?.total_count || 0})`,
           showFilter: true,
-          onDelete:
-            selectedTicketKeys.length > 0
-              ? () => (
-                  <PopConfirm
-                    title="Delete Selected Tickets"
-                    description={`Are you sure you want to delete ${selectedTicketKeys.length} selected tickets?`}
-                    okText="Delete"
-                    cancelText="Cancel"
-                    placement="top"
-                    onConfirm={() => handleDeleteSelected(selectedTicketKeys)}
-                  >
-                    <Button color="danger" size="sm">
-                      Delete Selected
-                    </Button>
-                  </PopConfirm>
-                )
-              : undefined
+          onDelete: selectedTicketKeys.length > 0 ? () => handleDeleteSelected(selectedTicketKeys) : undefined
+          // onDelete:
+          //   selectedTicketKeys.length > 0
+          //     ? () => (
+          //         <PopConfirm
+          //           title="Delete Selected Tickets"
+          //           description={`Are you sure you want to delete ${selectedTicketKeys.length} selected tickets?`}
+          //           okText="Delete"
+          //           cancelText="Cancel"
+          //           placement="top"
+          //           onConfirm={() => {
+          //             handleDeleteSelected(selectedTicketKeys);
+          //           }}
+          //         >
+          //           <Button color="danger" size="sm">
+          //             Delete Selected
+          //           </Button>
+          //         </PopConfirm>
+          //       )
+          //     : undefined
         }}
         pagination={{
           current: pagination?.current_page || 1,

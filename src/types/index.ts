@@ -228,7 +228,7 @@ export interface EmailConfiguration {
 
 export interface SLAConfiguration {
   id: number;
-  priority: 'low' | 'medium' | 'high';
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
   response_time_hours: number;
   resolution_time_hours: number;
   business_hours_only?: boolean;
@@ -248,17 +248,18 @@ export interface Ticket {
   category_id: number;
   subject: string;
   description: string;
-  priority: 'Low' | 'Medium' | 'High';
-  status: 'Open' | 'In Progress' | 'Closed' | 'closed' | 'Resolved' | 'Merged';
+  priority: number;
+  // priority: 'Low' | 'Medium' | 'High';
+  status: 'Open' | 'In Progress' | 'Closed' | 'Resolved' | 'Merged';
   source?: string;
   sla_deadline?: string | null;
-  sla_status?: string | null;
+  sla_status?: 'Within' | 'Breached' | 'Met' | null;
   first_response_at?: string | null;
   resolved_at?: string | null;
   closed_at?: string | null;
   assigned_by?: number;
   is_merged?: boolean;
-  attachment_urls: string;
+  attachment_urls: any;
   reopen_count?: number;
   time_spent_minutes?: number;
   last_reopened_at?: string | null;
@@ -274,6 +275,10 @@ export interface Ticket {
     [key: string]: any;
   };
   agents_user?: {
+    id: number;
+    [key: string]: any;
+  };
+  sla_priority?: {
     id: number;
     [key: string]: any;
   };

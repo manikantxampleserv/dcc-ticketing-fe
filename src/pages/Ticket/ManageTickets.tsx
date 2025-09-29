@@ -26,6 +26,7 @@ import { customersFn } from 'services/Customers';
 import { categoriesFn } from 'services/Category';
 import { usersFn } from 'services/users';
 import CustomFilePicker from 'shared/CustomFilePicker';
+import { slaFn } from 'services/SLAConfiguration';
 
 const validationSchema = Yup.object({
   customer_id: Yup.string().required('Customer is required'),
@@ -46,7 +47,7 @@ interface ManageTicketsProps {
 const priorities = ['Low', 'Medium', 'High'];
 const statuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
 const sources = ['Email', 'Phone', 'Chat', 'Web'];
-const slaStatuses = ['met', 'breached', 'pending'];
+const slaStatuses = ['Met', 'Breached', 'Pending', 'Active'];
 const tagsList = ['Bug', 'Feature', 'Urgent', 'Customer', 'Backend', 'UI']; // example tags
 
 const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, setSelected }) => {
@@ -56,6 +57,10 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
   const fileInputKey = useRef(0);
 
   // Data fetching
+  const { data: slaPriority } = useQuery({
+    queryKey: ['sla-list'],
+    queryFn: () => slaFn()
+  });
   const { data: usersData } = useQuery({
     queryKey: ['users'],
     queryFn: () => usersFn({ page: 1, limit: 1000 })
@@ -110,7 +115,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
       status: selected?.status || 'Open',
       source: selected?.source || 'Email',
       sla_deadline: selected?.sla_deadline || null,
-      sla_status: selected?.sla_status || 'pending',
+      sla_status: selected?.sla_status || 'Within',
       time_spent_minutes: selected?.time_spent_minutes || 0,
       tags: selected?.tags ? JSON.parse(selected?.tags) : [],
       merged_into_ticket_id: selected?.merged_into_ticket_id || null
@@ -130,7 +135,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
         category_id: Number(values.category_id),
         assigned_agent_id: Number(values.assigned_agent_id) || null,
         status: values.status,
-        priority: values.priority,
+        priority: Number(values.priority),
         source: values.source,
         sla_deadline: values.sla_deadline || null,
         sla_status: values.sla_status,
@@ -144,8 +149,6 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
       else createTicket(payload);
     }
   });
-  console.log('Valuessss : ', typeof formik.values['tags'], formik.values['tags']);
-
   // Properly reset on modal close
   const handleModalClose = () => {
     setOpen(false);
@@ -203,19 +206,21 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
               ))}
             </CustomSelect>
             <CustomSelect label="Priority" name="priority" formik={formik} placeholder="Select priority">
-              {priorities.map(p => (
-                <Option key={p} value={p}>
-                  {p}
+              {slaPriority?.data?.map((p: any) => (
+                <Option key={p.id} value={p.id}>
+                  {p.priority}
                 </Option>
               ))}
             </CustomSelect>
-            <CustomSelect label="Status" name="status" formik={formik} placeholder="Select status">
-              {statuses.map(s => (
-                <Option key={s} value={s}>
-                  {s}
-                </Option>
-              ))}
-            </CustomSelect>
+            {isEdit && (
+              <CustomSelect label="Status" name="status" formik={formik} placeholder="Select status">
+                {statuses.map(s => (
+                  <Option key={s} value={s}>
+                    {s}
+                  </Option>
+                ))}
+              </CustomSelect>
+            )}
             <CustomSelect label="Source" name="source" formik={formik} placeholder="Select source">
               {sources.map(s => (
                 <Option key={s} value={s}>
@@ -231,7 +236,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
               accept="image/*"
               formik={formik}
             />
-            <FormControl>
+            {/* <FormControl>
               <FormLabel>SLA Deadline</FormLabel>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker
@@ -239,22 +244,24 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
                   onChange={newValue => formik.setFieldValue('sla_deadline', newValue ? newValue.toISOString() : '')}
                 />
               </LocalizationProvider>
-            </FormControl>
-            <CustomSelect label="SLA Status" name="sla_status" formik={formik} placeholder="Select SLA status">
+            </FormControl> */}
+            {/* <CustomSelect label="SLA Status" name="sla_status" formik={formik} placeholder="Select SLA status">
               {slaStatuses.map(s => (
                 <Option key={s} value={s}>
                   {s}
                 </Option>
               ))}
-            </CustomSelect>
-            <CustomInput
-              disabled={true}
-              value={formik.values.time_spent_minutes / 60}
-              label="Time Spent (minutes)"
-              type="number"
-              name="time_spent_minutes"
-              formik={formik}
-            />
+            </CustomSelect> */}
+            {isEdit && (
+              <CustomInput
+                disabled={true}
+                value={formik.values.time_spent_minutes / 60}
+                label="Time Spent (minutes)"
+                type="number"
+                name="time_spent_minutes"
+                formik={formik}
+              />
+            )}
             {/* Tags multi-select */}
             <FormControl>
               <FormLabel>Tags</FormLabel>

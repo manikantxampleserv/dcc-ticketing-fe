@@ -37,8 +37,9 @@ import TicketDetailSkeleton from './Ticket/TicketDetailSkeleton';
 // ✅ Import react-mentions
 import { Mention, MentionsInput } from 'react-mentions';
 import { Ticket } from 'types/index';
-import { Timer, TimeSpentTimer } from 'components/TicketTimer';
+import { BusinessCountdown, BusinessHoursTimer, Timer, TimeSpentTimer } from 'components/TicketTimer';
 import { RemarkModal } from 'components/TicketStatusModal';
+import { slaFn } from 'services/SLAConfiguration';
 
 interface PriorityBadgeProps {
   priority: string;
@@ -77,6 +78,10 @@ export default function TicketDetail() {
 
   const [mentionedUsers, setMentionedUsers] = useState<{ id: string; display: string }[]>([]);
 
+  const { data: slaData } = useQuery({
+    queryKey: ['sla-configs'],
+    queryFn: slaFn
+  });
   const client = useQueryClient();
   const conversationRef = useRef<HTMLDivElement>(null);
   const { data: ticketsData } = useQuery({
@@ -94,6 +99,7 @@ export default function TicketDetail() {
     queryFn: () => ticketFn(Number(id))
   });
   const ticket = TicketDetail?.data;
+  console.log('Tikckkkj', ticket);
 
   const { mutate: createComment, isPending: isCreating } = useMutation({
     mutationFn: createCommentFn,
@@ -496,17 +502,23 @@ export default function TicketDetail() {
         </div>
 
         <div className="flex items-center space-x-3">
-          {ticket?.status === 'Closed' && ticket?.status === 'Merged' && (
-            <TimeSpentTimer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} />
-          )}
+          {/* {ticket?.status === 'Closed' && ticket?.status === 'Merged' && ( */}
+          {/* <TimeSpentTimer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} /> */}
+          {/* // )} */}
+          <BusinessCountdown
+            workStartedAt={ticket.created_at!}
+            totalSlaHours={slaData?.data?.[0]?.resolution_time_hours}
+            businessStartTime={slaData?.data?.[0]?.business_start_time}
+            businessEndTime={slaData?.data?.[0]?.business_end_time}
+          />
           {ticket?.status !== 'Closed' && ticket?.status !== 'Merged' && (
             <>
               {ticket?.status === 'Open' && (
                 <>
-                  <TimeSpentTimer
+                  {/* <TimeSpentTimer
                     workStartedAt={ticket.start_timer_at!}
                     time_spent_minutes={ticket?.time_spent_minutes}
-                  />
+                  /> */}
                   <button
                     disabled={isUpdatingProgress || isFetching}
                     onClick={() => handleStatusChange('In Progress', '')}
@@ -522,7 +534,12 @@ export default function TicketDetail() {
 
               {ticket?.status === 'In Progress' && (
                 <>
-                  <Timer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} />
+                  {/* <BusinessCountdown
+                    workStartedAt={ticket.created_at!}
+                    totalSlaHours={slaData?.data?.[0]?.resolution_time_hours}
+                    businessStartTime={slaData?.data?.[0]?.business_start_time}
+                    businessEndTime={slaData?.data?.[0]?.business_end_time}
+                  /> */}
 
                   <button
                     disabled={isUpdatingProgress || isFetching}
@@ -550,10 +567,10 @@ export default function TicketDetail() {
 
               {ticket?.status === 'Resolved' && (
                 <>
-                  <TimeSpentTimer
+                  {/* <TimeSpentTimer
                     workStartedAt={ticket.start_timer_at!}
                     time_spent_minutes={ticket?.time_spent_minutes}
-                  />
+                  /> */}
                   <button
                     disabled={isUpdatingProgress || isFetching}
                     // onClick={() => handleStatusChange('Closed')}
@@ -951,10 +968,10 @@ export default function TicketDetail() {
                 <div className="mt-1">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getPriorityColor(
-                      ticket?.priority || ''
+                      ticket?.sla_priority?.priority || ''
                     )}`}
                   >
-                    {ticket?.priority}
+                    {ticket?.sla_priority?.priority}
                   </span>
                 </div>
               </div>

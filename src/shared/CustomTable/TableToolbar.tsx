@@ -55,7 +55,7 @@ export const EnhancedTableToolbar = React.memo(
                     onConfirm={() => {
                       // Call your delete handler
                       onDelete();
-                      toast.success(`${numSelected} item(s) deleted successfully!`);
+                      // toast.success(`${numSelected} item(s) deleted successfully!`);
                     }}
                   >
                     <Tooltip title="Delete">

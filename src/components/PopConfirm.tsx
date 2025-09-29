@@ -126,11 +126,10 @@ const PopConfirm: React.FC<PopConfirmProps> = ({
   const handleConfirm = async () => {
     try {
       setIsLoading(true);
-      await onConfirm();
+      onConfirm();
       setOpen(false);
     } catch (error) {
       console.error('Confirmation action failed:', error);
-      // Keep dialog open on error so user can retry
     } finally {
       setIsLoading(false);
     }

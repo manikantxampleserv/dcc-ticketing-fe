@@ -10,20 +10,11 @@ type ManageSLAProps = {
   setOpen: (v: boolean) => void;
   selected: SLAConfiguration | null;
   setSelected: (v: SLAConfiguration | null) => void;
+  form: Partial<SLAConfiguration>;
+  setForm: (v: Partial<SLAConfiguration>) => void;
 };
 
-const ManageSLA = ({ open, setOpen, selected, setSelected }: ManageSLAProps) => {
-  const [form, setForm] = useState<Partial<SLAConfiguration>>({
-    priority: 'low',
-    response_time_hours: 1,
-    resolution_time_hours: 4,
-    business_hours_only: false,
-    business_start_time: '09:00:00',
-    business_end_time: '17:00:00',
-    include_weekends: false,
-    is_active: true
-  });
-
+const ManageSLA = ({ open, setOpen, selected, setSelected, form, setForm }: ManageSLAProps) => {
   useEffect(() => {
     if (selected) setForm(selected);
   }, [selected]);
@@ -51,11 +42,12 @@ const ManageSLA = ({ open, setOpen, selected, setSelected }: ManageSLAProps) => 
         <Stack spacing={2} mt={2}>
           <Select
             value={form.priority}
-            onChange={(_, value) => setForm({ ...form, priority: value as 'low' | 'medium' | 'high' })}
+            onChange={(_, value) => setForm({ ...form, priority: value as 'Low' | 'Medium' | 'High' | 'Critical' })}
           >
-            <Option value="low">Low</Option>
-            <Option value="medium">Medium</Option>
-            <Option value="high">High</Option>
+            <Option value="Low">Low</Option>
+            <Option value="Medium">Medium</Option>
+            <Option value="High">High</Option>
+            <Option value="Critical">Critical</Option>
           </Select>
           <Input
             type="number"

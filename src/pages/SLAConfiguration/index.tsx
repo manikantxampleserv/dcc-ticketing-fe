@@ -9,9 +9,20 @@ import { SLAConfiguration } from 'types';
 import ManageSLA from './ManageSLAConfiguration';
 import { deleteSLAFn, slaFn } from 'services/SLAConfiguration';
 
+const initialSLA = {
+  priority: 'Low',
+  response_time_hours: 1,
+  resolution_time_hours: 4,
+  business_hours_only: false,
+  business_start_time: '09:00:00',
+  business_end_time: '17:00:00',
+  include_weekends: false,
+  is_active: true
+};
 const SLAConfigurations = () => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<SLAConfiguration | null>(null);
+  const [form, setForm] = useState<Partial<SLAConfiguration>>(initialSLA as Partial<SLAConfiguration>);
 
   const { data, isLoading } = useQuery({
     queryKey: ['sla-configs'],
@@ -29,8 +40,11 @@ const SLAConfigurations = () => {
 
   const columns: CustomTableColumn<SLAConfiguration>[] = [
     { key: 'priority', dataIndex: 'priority', title: 'PRIORITY' },
-    { key: 'response_time_hours', dataIndex: 'response_time_hours', title: 'Response (Hrs)' },
-    { key: 'resolution_time_hours', dataIndex: 'resolution_time_hours', title: 'Resolution (Hrs)' },
+    { key: 'response_time_hours', dataIndex: 'response_time_hours', title: 'First Response Time (Hrs)' },
+    { key: 'resolution_time_hours', dataIndex: 'resolution_time_hours', title: 'Resolution Time (Hrs)' },
+    { key: 'business_start_time', dataIndex: 'business_start_time', title: 'Bussiness Start Time' },
+    { key: 'business_end_time', dataIndex: 'business_end_time', title: 'Bussiness End Time' },
+    // { key: 'include_weekends', dataIndex: 'include_weekends', title: 'Weekend Inclued' },
     {
       key: 'is_active',
       dataIndex: 'is_active',
@@ -71,6 +85,7 @@ const SLAConfigurations = () => {
         <Button
           onClick={() => {
             setSelected(null);
+            setForm(initialSLA as Partial<SLAConfiguration>);
             setOpen(true);
           }}
           startDecorator={<Plus size={16} />}
@@ -78,8 +93,15 @@ const SLAConfigurations = () => {
           Add SLA
         </Button>
       </div>
-      <CustomTable columns={columns} dataSource={data || []} rowKey="id" loading={isLoading} />
-      <ManageSLA open={open} setOpen={setOpen} selected={selected} setSelected={setSelected} />
+      <CustomTable columns={columns} dataSource={data?.data || []} rowKey="id" loading={isLoading} />
+      <ManageSLA
+        open={open}
+        setOpen={setOpen}
+        selected={selected}
+        setSelected={setSelected}
+        form={form}
+        setForm={setForm}
+      />
     </div>
   );
 };

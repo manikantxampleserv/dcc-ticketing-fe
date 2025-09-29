@@ -1,14 +1,107 @@
-import React, { useEffect, useState } from 'react';
-
-interface TimerProps {
-  workStartedAt?: string; // ISO timestamp when work began
-  time_spent_minutes: number; // already accumulated minutes
-}
+import React, { useEffect, useRef, useState } from 'react';
 
 interface TimerProps {
   workStartedAt?: string; // ISO timestamp when work last started (or undefined)
   time_spent_minutes: number; // total seconds already spent
 }
+
+// interface TimerProps {
+//   workStartedAt?: string; // ISO timestamp when work began
+//   time_spent_minutes: number; // accumulated seconds before this session
+//   businessHoursStart: number; // e.g. 9 for 9:00
+//   businessHoursEnd: number; // e.g. 17 for 17:00
+// }
+
+interface BusinessCountdownProps {
+  workStartedAt: string; // e.g. "2025-09-26T11:08:01.740Z"
+  totalSlaHours: number; // e.g. 8
+  businessStartTime: string; // e.g. "09:00" or "09:00:00"
+  businessEndTime: string; // e.g. "19:00" or "19:00:00"
+}
+
+const parseTimeString = (time: string) => {
+  // Accept "HH:MM" or "HH:MM:SS"
+  const parts = time.split(':').map(Number);
+  return {
+    hours: parts[0] || 0,
+    minutes: parts[1] || 0,
+    seconds: parts[2] || 0
+  };
+};
+
+export const BusinessCountdown: React.FC<BusinessCountdownProps> = ({
+  workStartedAt,
+  totalSlaHours,
+  businessStartTime,
+  businessEndTime
+}) => {
+  const slaSeconds = totalSlaHours * 3600;
+
+  const { hours: startH, minutes: startM, seconds: startS } = parseTimeString(businessStartTime);
+  const { hours: endH, minutes: endM, seconds: endS } = parseTimeString(businessEndTime);
+
+  // Sum business‐hour seconds elapsed since workStartedAt
+  const computeElapsedBusiness = (): number => {
+    const startDate = new Date(workStartedAt);
+    const now = new Date();
+    let elapsed = 0;
+    const msPerDay = 24 * 3600 * 1000;
+
+    // Iterate each calendar day
+    for (
+      let day = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      day <= now;
+      day = new Date(day.getTime() + msPerDay)
+    ) {
+      const windowStart = new Date(day);
+      windowStart.setHours(startH, startM, startS, 0);
+      const windowEnd = new Date(day);
+      windowEnd.setHours(endH, endM, endS, 0);
+
+      const intervalStart = new Date(Math.max(startDate.getTime(), windowStart.getTime()));
+      const intervalEnd = new Date(Math.min(now.getTime(), windowEnd.getTime()));
+
+      if (intervalEnd > intervalStart) {
+        elapsed += (intervalEnd.getTime() - intervalStart.getTime()) / 1000;
+      }
+    }
+    return Math.floor(elapsed);
+  };
+
+  const initialRemaining = Math.max(slaSeconds - computeElapsedBusiness(), 0);
+  const [remaining, setRemaining] = useState<number>(initialRemaining);
+  const intervalRef = useRef<number>();
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const todayStart = new Date(now);
+      todayStart.setHours(startH, startM, startS, 0);
+      const todayEnd = new Date(now);
+      todayEnd.setHours(endH, endM, endS, 0);
+
+      if (remaining > 0 && now >= todayStart && now < todayEnd) {
+        setRemaining(prev => Math.max(prev - 1, 0));
+      }
+    };
+
+    intervalRef.current = window.setInterval(tick, 1000);
+    return () => void clearInterval(intervalRef.current);
+  }, [remaining, startH, startM, startS, endH, endM, endS]);
+
+  const hh = String(Math.floor(remaining / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+  const ss = String(remaining % 60).padStart(2, '0');
+
+  return (
+    <div className="inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full font-mono text-lg">
+      <span className="animate-pulse block h-3 w-3 bg-blue-600 rounded-full" />
+      <span>
+        {hh}:{mm}:{ss}
+      </span>
+    </div>
+  );
+};
 
 export const Timer: React.FC<TimerProps> = ({ workStartedAt, time_spent_minutes }) => {
   if (!workStartedAt) return null;
