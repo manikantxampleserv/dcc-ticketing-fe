@@ -1,19 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Activity, CheckCircle, Clock, Ticket } from 'lucide-react';
+import { dashboardFn, DashboardStats } from '../../services/Dashboard';
+import Loader from '../../components/Loader';
+import { toast } from 'react-hot-toast';
 
-interface UserActivityStatsProps {
-  activeTickets?: number;
-  resolvedTickets?: number;
-  avgResponse?: number; // in hours or minutes
-  slaCompliance?: number; // percentage
-}
+const UserActivityStats: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-const UserActivityStats: React.FC<UserActivityStatsProps> = ({
-  activeTickets = 0,
-  resolvedTickets = 0,
-  avgResponse = 0,
-  slaCompliance = 0
-}) => {
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardFn();
+        setStats(data.stats);
+      } catch (error) {
+        toast.error('Failed to load activity stats');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return <Loader message="Loading activity stats..." />;
+  }
+
+  if (!stats) {
+    return <p className="text-center text-red-500">No activity data available</p>;
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {/* Active Tickets */}
@@ -21,8 +40,8 @@ const UserActivityStats: React.FC<UserActivityStatsProps> = ({
         <div className="flex items-center">
           <Ticket className="h-8 w-8 text-blue-600" />
           <div className="ml-4">
-            <p className="text-sm font-medium text-blue-600">Active Tickets</p>
-            <p className="text-2xl font-bold text-blue-900">{activeTickets}</p>
+            <p className="text-sm font-medium text-blue-600">Total</p>
+            <p className="text-2xl font-bold text-blue-900">{stats.totalTickets}</p>
           </div>
         </div>
       </div>
@@ -32,8 +51,8 @@ const UserActivityStats: React.FC<UserActivityStatsProps> = ({
         <div className="flex items-center">
           <CheckCircle className="h-8 w-8 text-green-600" />
           <div className="ml-4">
-            <p className="text-sm font-medium text-green-600">Resolved</p>
-            <p className="text-2xl font-bold text-green-600">{resolvedTickets}</p>
+            <p className="text-sm font-medium text-green-600"> Active</p>
+            <p className="text-2xl font-bold text-green-600">{stats.openTickets || 0}</p>
           </div>
         </div>
       </div>
@@ -43,8 +62,8 @@ const UserActivityStats: React.FC<UserActivityStatsProps> = ({
         <div className="flex items-center">
           <Clock className="h-8 w-8 text-yellow-600" />
           <div className="ml-4">
-            <p className="text-sm font-medium text-yellow-600">Avg Response</p>
-            <p className="text-2xl font-bold text-yellow-600">{avgResponse}</p>
+            <p className="text-sm font-medium text-yellow-600">Avg Response (h)</p>
+            <p className="text-2xl font-bold text-yellow-600">{stats.avg_response_time || 0}</p>
           </div>
         </div>
       </div>
@@ -55,7 +74,7 @@ const UserActivityStats: React.FC<UserActivityStatsProps> = ({
           <Activity className="h-8 w-8 text-purple-600" />
           <div className="ml-4">
             <p className="text-sm font-medium text-purple-600">SLA Compliance</p>
-            <p className="text-2xl font-bold text-purple-600">{slaCompliance}%</p>
+            <p className="text-2xl font-bold text-purple-600">{stats.sla_compliance || 2}%</p>
           </div>
         </div>
       </div>

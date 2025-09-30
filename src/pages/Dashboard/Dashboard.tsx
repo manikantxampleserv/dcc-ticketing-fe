@@ -144,7 +144,7 @@ const Dashboard: React.FC = () => {
           <UrgentTicketCard limit={3} />
 
           {/* Performance Card */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+          {/* <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="p-5 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-900">Performance</h2>
             </div>
@@ -173,7 +173,7 @@ const Dashboard: React.FC = () => {
                 <span className="font-medium text-sm">{stats.customer_satisfaction}/5</span>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

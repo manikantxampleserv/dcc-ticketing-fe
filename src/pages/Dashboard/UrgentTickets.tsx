@@ -3,6 +3,7 @@ import { AlertTriangle, X } from 'lucide-react';
 import { Ticket as TicketType } from 'types';
 import { useQuery } from '@tanstack/react-query';
 import { ticketsFn } from '../../services/Ticket';
+import Loader from '../../components/Loader';
 
 interface UrgentTicketCardProps {
   limit?: number;
@@ -14,8 +15,8 @@ const UrgentTicketCard = ({ limit = 3, emptyIllustration }: UrgentTicketCardProp
 
   // Fetch tickets
   const { data: ticketsData, isLoading } = useQuery({
-    queryKey: ['tickets', 'urgent'],
-    queryFn: () => ticketsFn({ page: 1, limit: 1000, status: 'urgent' })
+    queryKey: ['tickets'],
+    queryFn: () => ticketsFn({ page: 1, limit: 1000, priority: 'Critical' })
   });
 
   const tickets: TicketType[] = ticketsData?.data || [];
@@ -34,6 +35,24 @@ const UrgentTicketCard = ({ limit = 3, emptyIllustration }: UrgentTicketCardProp
     }
   };
 
+  const renderTickets = (ticketsToRender: TicketType[]) => {
+    return ticketsToRender.map(ticket => (
+      <div
+        key={ticket.id}
+        className="p-4 border rounded-lg bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
+      >
+        <p className="text-sm font-semibold text-gray-900">{ticket.ticket_number}</p>
+        <p className="text-sm text-gray-600 truncate">{ticket.subject}</p>
+        <div className="mt-2 flex items-center justify-between text-xs">
+          <span className={`px-2 py-0.5 rounded-full font-medium ${getStatusColor(ticket.status)}`}>
+            {ticket.status}
+          </span>
+          {ticket.sla_status && <span className="text-red-600 font-medium">SLA: {ticket.sla_status}</span>}
+        </div>
+      </div>
+    ));
+  };
+
   return (
     <>
       {/* Compact Card */}
@@ -48,30 +67,19 @@ const UrgentTicketCard = ({ limit = 3, emptyIllustration }: UrgentTicketCardProp
           </button>
         </div>
 
-        <div className="p-5 space-y-3">
+        {/* Card Content */}
+        <div className="relative min-h-[500px]">
           {isLoading ? (
-            <p className="text-gray-500 text-center py-6">Loading tickets...</p>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader />
+            </div>
           ) : displayedTickets.length === 0 ? (
             <div className="text-center py-6">
               {emptyIllustration && <img src={emptyIllustration} alt="No tickets" className="mx-auto mb-4 w-32" />}
               <p className="text-gray-500">No tickets</p>
             </div>
           ) : (
-            displayedTickets.map(ticket => (
-              <div
-                key={ticket.id}
-                className="p-4 border rounded-lg bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
-              >
-                <p className="text-sm font-semibold text-gray-900">{ticket.ticket_number}</p>
-                <p className="text-sm text-gray-600 truncate">{ticket.subject}</p>
-                <div className="mt-2 flex items-center justify-between text-xs">
-                  <span className={`px-2 py-0.5 rounded-full font-medium ${getStatusColor(ticket.status)}`}>
-                    {ticket.status}
-                  </span>
-                  {ticket.sla_status && <span className="text-red-600 font-medium">SLA: {ticket.sla_status}</span>}
-                </div>
-              </div>
-            ))
+            <div className="space-y-3">{renderTickets(displayedTickets)}</div>
           )}
         </div>
       </div>
@@ -90,22 +98,17 @@ const UrgentTicketCard = ({ limit = 3, emptyIllustration }: UrgentTicketCardProp
             <h2 className="text-xl font-semibold text-gray-900 mb-4">All Urgent Tickets</h2>
 
             {isLoading ? (
-              <p className="text-gray-500 text-center py-6">Loading tickets...</p>
+              <div className="flex justify-center py-6">
+                <Loader />
+              </div>
             ) : tickets.length === 0 ? (
               <p className="text-gray-500 text-center py-6">No tickets found</p>
             ) : (
               <div className="space-y-3">
                 {tickets.map(ticket => (
-                  <div key={ticket.id} className="p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <p className="text-sm font-semibold text-gray-900">{ticket.ticket_number}</p>
-                    <p className="text-sm text-gray-600 truncate">{ticket.subject}</p>
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <span className={`px-2 py-0.5 rounded-full font-medium ${getStatusColor(ticket.status)}`}>
-                        {ticket.status}
-                      </span>
-                      {ticket.sla_status && <span className="text-red-600 font-medium">SLA: {ticket.sla_status}</span>}
-                    </div>
-                  </div>
+                  <a key={ticket.id} href={`/tickets/${ticket.id}`} className="block cursor-pointer">
+                    {renderTickets([ticket])}
+                  </a>
                 ))}
               </div>
             )}

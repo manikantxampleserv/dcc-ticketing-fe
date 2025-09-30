@@ -6,11 +6,11 @@ interface LoaderProps {
   text?: string; // optional loading text
 }
 
-const Loader: React.FC<LoaderProps> = ({ size = 6, color = 'bg-blue-500', text = 'Loading...' }) => {
+const Loader: React.FC<LoaderProps> = ({ size = 2, color = 'bg-blue-500', text = 'Loading...' }) => {
   const dotStyle = `w-${size} h-${size} ${color} rounded-full animate-bounce`;
 
   return (
-    <div className="flex flex-col justify-center items-center h-[70vh]">
+    <div className="flex flex-col justify-center items-center h-[40vh]">
       <div className="flex space-x-2">
         <span className={`${dotStyle} delay-0`}></span>
         <span className={`${dotStyle} delay-150`}></span>

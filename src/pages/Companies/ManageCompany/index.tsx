@@ -67,7 +67,7 @@ const ManageCompany: React.FC<{
 
   return (
     <Modal open={open} onClose={handleClose}>
-      <ModalDialog size="md" component={Sheet} className="!w-[90%] sm:!w-[500px]">
+      <ModalDialog size="md" component={Sheet} className="!w-[500px] sm:!w-[40%]">
         <div className="flex justify-between items-center">
           <div>
             <p className="text-lg font-semibold">{isEdit ? 'Edit Company' : 'Create Company'}</p>
@@ -76,7 +76,7 @@ const ManageCompany: React.FC<{
           <ModalClose onClick={handleClose} />
         </div>
 
-        <form onSubmit={formik.handleSubmit} className="mt-4 space-y-3">
+        <form onSubmit={formik.handleSubmit} className="mt-4 space-y-3 row-6">
           <div>
             <label className="text-sm font-medium">Company Name</label>
             <input
@@ -86,6 +86,7 @@ const ManageCompany: React.FC<{
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
               required
+              placeholder="Select  Company Name"
             />
           </div>
 
@@ -98,6 +99,7 @@ const ManageCompany: React.FC<{
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
               required
+              placeholder="Select Domain"
             />
           </div>
 
@@ -109,6 +111,7 @@ const ManageCompany: React.FC<{
               value={formik.values.contact_email}
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
+              placeholder="Select Contact Email"
             />
           </div>
 
@@ -120,6 +123,7 @@ const ManageCompany: React.FC<{
               value={formik.values.contact_phone}
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
+              placeholder="Select Contact Phone"
             />
           </div>
 
@@ -131,6 +135,7 @@ const ManageCompany: React.FC<{
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
               rows={3}
+              placeholder="Select Address"
             />
           </div>
 

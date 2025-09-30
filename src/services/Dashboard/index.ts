@@ -53,6 +53,8 @@ export interface DashboardStats {
   sla_breached: number;
   avg_resolution_time: number;
   customer_satisfaction: number;
+  breachedTickets: number;
+  progressTickets: number;
 }
 
 export interface Ticket {
@@ -83,7 +85,9 @@ export const dashboardFn = async (): Promise<{
         resolvedToday: data.resolvedToday ?? 0,
         sla_breached: data.sla_breached ?? 0,
         avg_resolution_time: data.avg_resolution_time ?? 0,
-        customer_satisfaction: data.customer_satisfaction ?? 0
+        customer_satisfaction: data.customer_satisfaction ?? 0,
+        breachedTickets: data.breachedTickets ?? 0,
+        progressTickets: data.progressTickets ?? 0
       },
       tickets: data.tickets ?? [] // API currently doesn’t send tickets array
     };

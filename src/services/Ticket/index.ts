@@ -17,8 +17,8 @@ export const ticketsFn = async (params: {
   page?: number;
   limit?: number;
   search?: string;
-  status: string;
-  priority: string;
+  status?: string; // <-- optional banaya
+  priority?: string; // <-- optional banaya
 }) => {
   try {
     const response = await axiosInstance.get('/ticket', { params });
@@ -42,6 +42,23 @@ export const ticketFn = async (id: number): Promise<any> => {
   }
 };
 
+export const ticketAttachmentFn = async (id: number): Promise<any[]> => {
+  try {
+    const response = await axiosInstance.get(`/ticket-attachment/${id}`);
+
+    if (response.status === 200 && response.data) {
+      // Extract ticket_attachments array
+      return response.data.data?.ticket_attachments || [];
+    }
+
+    throw new Error(response.data?.message || 'Failed to fetch ticket attachments');
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error(error.message || 'Something went wrong while fetching attachments');
+  }
+};
 /**
  * Create ticket
  * @param {Ticket} body - ticket data

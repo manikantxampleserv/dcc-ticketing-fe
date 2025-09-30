@@ -63,7 +63,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     <FormControl error={hasError} required={required} disabled={disabled} sx={{ width: fullWidth ? '100%' : 'auto' }}>
       <FormLabel>
         {label}
-        {required && <span style={{ color: 'var(--joy-palette-danger-500)' }}> *</span>}
+        {required && <span style={{ color: 'var(--joy-palette-danger-500)' }}> </span>}
       </FormLabel>
 
       <Select

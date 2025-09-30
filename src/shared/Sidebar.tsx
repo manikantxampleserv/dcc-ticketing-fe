@@ -15,6 +15,7 @@ import {
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTickets } from '../context/TicketContext';
+import QuickStats from 'pages/Quick Stats';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -64,24 +65,12 @@ const Sidebar: React.FC = () => {
           })}
         </ul>
       </div>
-
-      <div className="p-4 border-t border-gray-200 mt-8">
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Stats</h3>
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Open Tickets</span>
-            <span className="font-medium text-blue-600">{state.stats.open_tickets || 0}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">In Progress</span>
-            <span className="font-medium text-orange-600">{state.stats.in_progress_tickets || 0}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">SLA Breached</span>
-            <span className="font-medium text-red-600">{state.stats.sla_breached || 0}</span>
-          </div>
-        </div>
-      </div>
+      <QuickStats
+        openTickets={state.stats.open_tickets}
+        inProgressTickets={state.stats.in_progress_tickets}
+        slaBreached={state.stats.sla_breached}
+        title="Support Ticket Overview"
+      />
     </nav>
   );
 };

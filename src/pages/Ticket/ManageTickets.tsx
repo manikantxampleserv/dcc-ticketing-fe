@@ -183,29 +183,35 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
 
         <form onSubmit={formik.handleSubmit}>
           <div className="grid lg:grid-cols-2 gap-4">
-            <CustomSelect label="Customer" name="customer_id" formik={formik} placeholder="Select a customer">
+            <CustomSelect label="Customer" required name="customer_id" formik={formik} placeholder="Select a customer">
               {customers.map((c: any) => (
                 <Option key={c.id} value={c.id}>
                   {c.first_name} {c.last_name}
                 </Option>
               ))}
             </CustomSelect>
-            <CustomSelect label="Category" name="category_id" formik={formik} placeholder="Select a category">
+            <CustomSelect label="Category" required name="category_id" formik={formik} placeholder="Select a category">
               {categories.map((cat: any) => (
                 <Option key={cat.id} value={cat.id}>
                   {cat.category_name}
                 </Option>
               ))}
             </CustomSelect>
-            <CustomInput label="Subject" name="subject" formik={formik} placeholder="Enter ticket subject" />
-            <CustomSelect label="Assigned Agent" name="assigned_agent_id" formik={formik} placeholder="Select an agent">
+            <CustomSelect label="Subject" required name="subject" formik={formik} placeholder="Enter ticket subject" />
+            <CustomSelect
+              label="Assigned Agent"
+              required
+              name="assigned_agent_id"
+              formik={formik}
+              placeholder="Select an agent"
+            >
               {agents.map((a: any) => (
                 <Option key={a.id} value={a.id}>
                   {a.first_name} {a.last_name}
                 </Option>
               ))}
             </CustomSelect>
-            <CustomSelect label="Priority" name="priority" formik={formik} placeholder="Select priority">
+            <CustomSelect label="Priority" required name="priority" formik={formik} placeholder="Select priority">
               {slaPriority?.data?.map((p: any) => (
                 <Option key={p.id} value={p.id}>
                   {p.priority}
@@ -213,7 +219,7 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
               ))}
             </CustomSelect>
             {isEdit && (
-              <CustomSelect label="Status" name="status" formik={formik} placeholder="Select status">
+              <CustomSelect label="Status" required name="status" formik={formik} placeholder="Select status">
                 {statuses.map(s => (
                   <Option key={s} value={s}>
                     {s}

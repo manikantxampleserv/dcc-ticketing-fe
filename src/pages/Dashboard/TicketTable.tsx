@@ -1,8 +1,9 @@
-import { Input, Select, Option, Typography } from '@mui/joy';
+import { Input, Select, Option } from '@mui/joy';
 import { useQuery } from '@tanstack/react-query';
 import { ticketsFn } from '../../services/Ticket';
-import { Ticket as TicketType } from 'types';
+import { Ticket, Ticket as TicketType } from 'types';
 import { useState } from 'react';
+import Loader from '../../components/Loader';
 
 interface TicketTableProps {
   tickets?: TicketType[];
@@ -16,6 +17,7 @@ const TicketTable = ({ tickets, loading, fetchTickets = true }: TicketTableProps
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Fetch tickets using React Query
   const { data: fetchedTicketsData, isLoading: tableLoading } = useQuery({
     queryKey: ['ticket', search, statusFilter],
     queryFn: () =>
@@ -23,7 +25,7 @@ const TicketTable = ({ tickets, loading, fetchTickets = true }: TicketTableProps
         page: 1,
         limit: 1000,
         search: search || undefined,
-        status: statusFilter !== 'all' ? statusFilter : ''
+        status: statusFilter !== 'all' ? statusFilter : undefined
       }),
     enabled: fetchTickets
   });
@@ -31,6 +33,7 @@ const TicketTable = ({ tickets, loading, fetchTickets = true }: TicketTableProps
   const displayedTickets = tickets || fetchedTicketsData?.data || [];
   const loadingState = loading ?? tableLoading;
 
+  // Status badge colors
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'open':
@@ -64,10 +67,10 @@ const TicketTable = ({ tickets, loading, fetchTickets = true }: TicketTableProps
         </Select>
       </div>
 
-      {/* Scrollable Table */}
+      {/* Ticket Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {/* Table Header */}
-        <div className="sticky top-0 bg-gray z-10 border-b border-gray-200 px-4 py-2 font-medium flex text-sm">
+        <div className="sticky top-0 bg-white z-10 border-b border-gray-200 px-4 py-2 font-medium flex text-sm">
           <div className="flex-[1]">TICKET NO</div>
           <div className="flex-[3] pl-12">SUBJECT</div>
           <div className="flex-[2]">CUSTOMER</div>
@@ -76,11 +79,13 @@ const TicketTable = ({ tickets, loading, fetchTickets = true }: TicketTableProps
         </div>
 
         {/* Table Body */}
-        <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
           {loadingState ? (
-            <div className="flex justify-center items-center h-32 text-gray-500 text-xs">Loading tickets...</div>
+            <div className="flex justify-center items-center h-32">
+              <Loader text="Loading tickets..." color="bg-blue-500" />
+            </div>
           ) : displayedTickets.length > 0 ? (
-            displayedTickets.map(row => (
+            displayedTickets.map((row: Partial<Ticket>) => (
               <div key={row.id} className="flex border-b border-gray-100 px-4 py-2 text-sm">
                 <div className="flex-[1]">{row.ticket_number}</div>
                 <div className="flex-[3] pl-12">{row.subject}</div>
@@ -90,7 +95,17 @@ const TicketTable = ({ tickets, loading, fetchTickets = true }: TicketTableProps
                     : '-'}
                 </div>
                 <div className="flex-[1]">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${row.priority}`}>{row.priority}</span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      row.sla_priority.priority === 'High'
+                        ? 'bg-red-100 text-red-700'
+                        : row.sla_priority.priority === 'Medium'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {row?.sla_priority?.priority}
+                  </span>
                 </div>
                 <div className="flex-[1]">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(row.status)}`}>

@@ -40,6 +40,7 @@ import { Ticket } from 'types/index';
 import { BusinessCountdown, BusinessHoursTimer, Timer, TimeSpentTimer } from 'components/TicketTimer';
 import { RemarkModal } from 'components/TicketStatusModal';
 import { slaFn } from 'services/SLAConfiguration';
+import { TicketAttachmentsCard } from 'components/AttachmentsFile';
 
 interface PriorityBadgeProps {
   priority: string;
@@ -75,6 +76,7 @@ export default function TicketDetail() {
   const [searchUser, setSearchUser] = useState('');
   const [search, setSearch] = useState('');
   // ✅ Add mentions state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [mentionedUsers, setMentionedUsers] = useState<{ id: string; display: string }[]>([]);
 
@@ -1066,6 +1068,8 @@ export default function TicketDetail() {
               )}
             </div>
           </div>
+
+          <TicketAttachmentsCard ticketId={ticket} />
 
           {/* Customer Info */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
