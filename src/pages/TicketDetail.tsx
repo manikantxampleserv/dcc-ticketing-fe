@@ -99,7 +99,7 @@ export default function TicketDetail() {
     queryFn: () => ticketFn(Number(id))
   });
   const ticket = TicketDetail?.data;
-  console.log('Tikckkkj', ticket);
+  const slaDatas = slaData?.data?.find((val: any) => val?.priority === ticket?.sla_priority?.priority);
 
   const { mutate: createComment, isPending: isCreating } = useMutation({
     mutationFn: createCommentFn,
@@ -507,84 +507,98 @@ export default function TicketDetail() {
           {/* // )} */}
           <BusinessCountdown
             workStartedAt={ticket.created_at!}
-            totalSlaHours={slaData?.data?.[0]?.resolution_time_hours}
-            businessStartTime={slaData?.data?.[0]?.business_start_time}
-            businessEndTime={slaData?.data?.[0]?.business_end_time}
+            totalSlaHours={slaDatas?.resolution_time_hours}
+            businessStartTime={slaDatas?.business_start_time}
+            businessEndTime={slaDatas?.business_end_time}
           />
-          {ticket?.status !== 'Closed' && ticket?.status !== 'Merged' && (
-            <>
-              {ticket?.status === 'Open' && (
-                <>
-                  {/* <TimeSpentTimer
+          {ticket?.sla_status === 'Breached' ? (
+            <button
+              disabled={isUpdatingProgress || isFetching}
+              onClick={() => handleStatusChange('In Progress', '')}
+              className={`flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg ${
+                (isUpdatingProgress || isFetching) && 'bg-orange-400 hover:bg-orange-400 cursor-wait'
+              } hover:bg-orange-700 transition-colors`}
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Breached
+            </button>
+          ) : (
+            ticket?.status !== 'Closed' &&
+            ticket?.status !== 'Merged' && (
+              <>
+                {ticket?.status === 'Open' && (
+                  <>
+                    {/* <TimeSpentTimer
                     workStartedAt={ticket.start_timer_at!}
                     time_spent_minutes={ticket?.time_spent_minutes}
                   /> */}
-                  <button
-                    disabled={isUpdatingProgress || isFetching}
-                    onClick={() => handleStatusChange('In Progress', '')}
-                    className={`flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg ${
-                      (isUpdatingProgress || isFetching) && 'bg-orange-400 hover:bg-orange-400 cursor-wait'
-                    } hover:bg-orange-700 transition-colors`}
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Work
-                  </button>
-                </>
-              )}
+                    <button
+                      disabled={isUpdatingProgress || isFetching}
+                      onClick={() => handleStatusChange('In Progress', '')}
+                      className={`flex items-center px-3 py-2 bg-orange-600 text-white rounded-lg ${
+                        (isUpdatingProgress || isFetching) && 'bg-orange-400 hover:bg-orange-400 cursor-wait'
+                      } hover:bg-orange-700 transition-colors`}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Work
+                    </button>
+                  </>
+                )}
 
-              {ticket?.status === 'In Progress' && (
-                <>
-                  {/* <BusinessCountdown
+                {ticket?.status === 'In Progress' && (
+                  <>
+                    {/* <BusinessCountdown
                     workStartedAt={ticket.created_at!}
                     totalSlaHours={slaData?.data?.[0]?.resolution_time_hours}
                     businessStartTime={slaData?.data?.[0]?.business_start_time}
                     businessEndTime={slaData?.data?.[0]?.business_end_time}
                   /> */}
 
-                  <button
-                    disabled={isUpdatingProgress || isFetching}
-                    onClick={() => handleStatusChange('Open', '')}
-                    className={`flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ${
-                      (isUpdatingProgress || isFetching) && 'bg-gray-400 hover:bg-gray-400 cursor-wait'
-                    }`}
-                  >
-                    <Pause className="h-4 w-4 mr-2" />
-                    Pause
-                  </button>
-                  <button
-                    disabled={isUpdatingProgress || isFetching}
-                    // onClick={() => handleStatusChange('Resolved')}
-                    onClick={() => setShowResolveModal(true)}
-                    className={`flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors ${
-                      (isUpdatingProgress || isFetching) && 'bg-green-400 hover:bg-green-400 cursor-wait'
-                    }`}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Resolve
-                  </button>
-                </>
-              )}
+                    <button
+                      disabled={isUpdatingProgress || isFetching}
+                      onClick={() => handleStatusChange('Open', '')}
+                      className={`flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ${
+                        (isUpdatingProgress || isFetching) && 'bg-gray-400 hover:bg-gray-400 cursor-wait'
+                      }`}
+                    >
+                      <Pause className="h-4 w-4 mr-2" />
+                      Pause
+                    </button>
+                    <button
+                      disabled={isUpdatingProgress || isFetching}
+                      // onClick={() => handleStatusChange('Resolved')}
+                      onClick={() => setShowResolveModal(true)}
+                      className={`flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors ${
+                        (isUpdatingProgress || isFetching) && 'bg-green-400 hover:bg-green-400 cursor-wait'
+                      }`}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Resolve
+                    </button>
+                  </>
+                )}
 
-              {ticket?.status === 'Resolved' && (
-                <>
-                  {/* <TimeSpentTimer
+                {ticket?.status === 'Resolved' && (
+                  <>
+                    {/* <TimeSpentTimer
                     workStartedAt={ticket.start_timer_at!}
                     time_spent_minutes={ticket?.time_spent_minutes}
                   /> */}
-                  <button
-                    disabled={isUpdatingProgress || isFetching}
-                    // onClick={() => handleStatusChange('Closed')}
-                    onClick={() => setShowCloseModal(true)}
-                    className={`flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ${
-                      (isUpdatingProgress || isFetching) && 'bg-gray-400 hover:bg-gray-400 cursor-wait'
-                    }`}
-                  >
-                    <Square className="h-4 w-4 mr-2" />
-                    Close
-                  </button>
-                </>
-              )}
-            </>
+                    <button
+                      disabled={isUpdatingProgress || isFetching}
+                      // onClick={() => handleStatusChange('Closed')}
+                      onClick={() => setShowCloseModal(true)}
+                      className={`flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors ${
+                        (isUpdatingProgress || isFetching) && 'bg-gray-400 hover:bg-gray-400 cursor-wait'
+                      }`}
+                    >
+                      <Square className="h-4 w-4 mr-2" />
+                      Close
+                    </button>
+                  </>
+                )}
+              </>
+            )
           )}
         </div>
       </div>
@@ -765,13 +779,17 @@ export default function TicketDetail() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <span className="text-sm !capitalize font-medium text-gray-900">
-                          {response?.ticket_comment_customers
+                          {response?.ticket_comment_customers && response?.ticket_comment_customers?.first_name
                             ? response?.ticket_comment_customers?.first_name +
                               ' ' +
                               response?.ticket_comment_customers?.last_name
-                            : response?.ticket_comment_users?.first_name +
-                              ' ' +
-                              response?.ticket_comment_users?.last_name}
+                              ? response?.ticket_comment_customers?.last_name
+                              : ''
+                            : response?.ticket_comment_users?.first_name
+                            ? response?.ticket_comment_users?.first_name
+                            : '' + ' ' + response?.ticket_comment_users?.last_name
+                            ? response?.ticket_comment_users?.last_name
+                            : ''}
                         </span>
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${

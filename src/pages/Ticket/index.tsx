@@ -48,7 +48,6 @@ const TicketManagement = () => {
   });
 
   const handleDeleteTicket = (ticket: Ticket) => deleteTicket({ ids: [Number(ticket.id)] });
-  console.log('IIII : ', selectedTicketKeys);
   const handleDeleteSelected = async (keys: React.Key[]) => {
     await deleteTicket({ ids: keys.map(key => Number(key)) });
     setSelectedTicketKeys([]);
@@ -77,6 +76,19 @@ const TicketManagement = () => {
         return 'bg-purple-100 text-purple-700'; // ✅ Amber/Yellow for pending
       case 'Closed':
         return 'bg-slate-200 text-slate-800'; // ✅ Better subtle gray for closed
+      default:
+        return 'bg-gray-100 text-gray-700'; // ✅ Clean neutral fallback
+    }
+  };
+  const getSLAStatusColor = (status: string) => {
+    switch (status) {
+      case 'Within':
+        return 'bg-green-100 text-green-700'; // ✅ Green for active/open
+      case 'Breached':
+        return 'bg-red-100 text-red-700'; // ✅ Amber/Yellow for pending
+      case 'Met':
+        return 'bg-purple-100 text-purple-700'; // ✅ Amber/Yellow for pending
+
       default:
         return 'bg-gray-100 text-gray-700'; // ✅ Clean neutral fallback
     }
@@ -131,6 +143,15 @@ const TicketManagement = () => {
       sortable: true,
       render: (status: string) => (
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)}`}>{status}</span>
+      )
+    },
+    {
+      key: 'sla_status',
+      dataIndex: 'sla_status',
+      title: 'SLA STATUS',
+      sortable: true,
+      render: (status: string) => (
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSLAStatusColor(status)}`}>{status}</span>
       )
     },
     {
