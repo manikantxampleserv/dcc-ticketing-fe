@@ -1,134 +1,94 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import CustomSelect from 'shared/CustomSelect';
+import { usersFn } from 'services/users';
+import { addCcToTicket } from 'services/CCTicket';
 
-export default function AllocateTicketModal({ onClose }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const [filteredUsers, setFilteredUsers] = useState([]);
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role?: string;
+}
+
+interface AllocateTicketModalProps {
+  onClose: () => void;
+  ticket_id: number;
+}
+
+const AllocateTicketModal: React.FC<AllocateTicketModalProps> = ({ onClose, ticket_id }) => {
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [reason, setReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const dropdownRef = useRef(null);
-  const inputRef = useRef(null);
+  // Fetch users
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersFn({ page: 1, limit: 1000 })
+  });
 
-  // Dummy user data for now
-  const users = [
-    { id: 1, first_name: 'Amit', last_name: 'Verma', email: 'amit@example.com' },
-    { id: 2, first_name: 'Sara', last_name: 'Khan', email: 'sara@example.com' },
-    { id: 3, first_name: 'John', last_name: 'Doe', email: 'john@example.com' }
-  ];
+  const agents: User[] = usersData?.data || [];
 
-  useEffect(() => {
-    if (searchTerm) {
-      const results = users.filter(
-        u =>
-          u.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredUsers(results);
-    } else {
-      setFilteredUsers(users);
-    }
-  }, [searchTerm]);
+  // Filtered users for searchable dropdown
+  const filteredAgents = useMemo(() => {
+    if (!searchTerm) return agents;
+    return agents.filter(a => `${a.first_name} ${a.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [agents, searchTerm]);
 
-  const handleUserSelect = user => {
-    setSelectedUserId(user.id);
-    setSearchTerm(`${user.first_name} ${user.last_name}`);
-    setIsOpen(false);
-  };
-
-  const handleSubmit = e => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!selectedUserId) return;
+
     setIsLoading(true);
 
-    setTimeout(() => {
-      console.log('Allocated to user:', selectedUserId, 'Reason:', reason);
-      setIsLoading(false);
+    try {
+      await addCcToTicket({
+        ticket_id: ticket_id, // pass the ticket ID here
+        user_id: selectedUserId
+      });
+
       onClose();
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Allocate Ticket</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          Add <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-sm">(CC)</span>
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Searchable User Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-2">
-              Assign to User
-            </label>
-            <div className="relative">
-              <input
-                ref={inputRef}
-                id="user-search"
-                type="text"
-                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
-                placeholder="Search users by name or email..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                onFocus={() => setIsOpen(true)}
-                autoComplete="off"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+          {/* Searchable Dropdown */}
+          <select
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={selectedUserId || ''}
+            onChange={e => setSelectedUserId(Number(e.target.value))}
+            required
+          >
+            <option value="">Select an agent</option>
+            {agents.map(a => (
+              <option key={a.id} value={a.id}>
+                {a.first_name} {a.last_name}
+              </option>
+            ))}
+          </select>
 
-            {/* Dropdown Menu */}
-            {isOpen && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map(user => (
-                    <div
-                      key={user.id}
-                      onClick={() => handleUserSelect(user)}
-                      className="px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm font-medium">
-                            {user.first_name.charAt(0)}
-                            {user.last_name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {user.first_name} {user.last_name}
-                          </div>
-                          {user.email && <div className="text-sm text-gray-500">{user.email}</div>}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-gray-500 text-center">No users found matching "{searchTerm}"</div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Reason Textarea */}
+          {/* Optional reason */}
           <div>
-            <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-2">
-              Reason (Optional)
-            </label>
-            <textarea
-              id="reason"
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-y focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-gray-50 hover:bg-white"
+            <label className="block text-gray-700 mb-1">Reason (optional)</label>
+            <input
+              type="text"
               value={reason}
               onChange={e => setReason(e.target.value)}
-              placeholder="Why are you allocating this ticket?"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter reason"
             />
           </div>
 
@@ -150,24 +110,17 @@ export default function AllocateTicketModal({ onClose }) {
               {isLoading ? (
                 <>
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path
                       className="opacity-75"
                       fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <span>Allocating...</span>
+                  <span>Adding...</span>
                 </>
               ) : (
-                <span>Allocate Ticket</span>
+                <span>Add CC</span>
               )}
             </button>
           </div>
@@ -175,4 +128,6 @@ export default function AllocateTicketModal({ onClose }) {
       </div>
     </div>
   );
-}
+};
+
+export default AllocateTicketModal;

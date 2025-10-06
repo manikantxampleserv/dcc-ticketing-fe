@@ -36,30 +36,62 @@ const QuickStats: React.FC = () => {
   ];
 
   return (
-    <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 max-w-[220px] mx-auto p-2 ml-2">
-      <h3 className="text-sm font-medium text-gray-900 text-center ">Quick Stats</h3>
-      <div className="w-full h-[150px]">
-        <ResponsiveContainer width="120%" height="120%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={50} // smaller radius
-              innerRadius={25} // smaller donut hole
-              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-              // only percent for compactness
-            >
-              {data.map(entry => (
-                <Cell key={entry.name} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value: number) => value} />
-            <Legend verticalAlign="bottom" height={20} iconSize={10} wrapperStyle={{ fontSize: '10px' }} />
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="flex justify-center items-center min-h-[250px]">
+      <div className="bg-gray-50 rounded-lg shadow-lg border border-gray-100 p-4 w-[250px]">
+        <h3 className="text-sm font-medium text-gray-900 text-center mb-2">Quick Stats</h3>
+        <div className="w-full h-[180px] flex justify-center items-center">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={60}
+                innerRadius={30}
+                paddingAngle={4}
+                isAnimationActive={true}
+                animationBegin={0}
+                animationDuration={1000}
+                animationEasing="ease-out"
+              >
+                {data.map(entry => (
+                  <Cell
+                    key={entry.name}
+                    fill={entry.color}
+                    stroke="#fff"
+                    strokeWidth={2}
+                    style={{
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                      cursor: 'pointer',
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                ))}
+              </Pie>
+
+              <Tooltip
+                formatter={value => `${value}`}
+                contentStyle={{
+                  fontSize: '12px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              />
+              <Legend
+                verticalAlign="bottom"
+                height={30}
+                iconSize={10}
+                wrapperStyle={{
+                  fontSize: '11px',
+                  paddingTop: '5px',
+                  textAlign: 'center'
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

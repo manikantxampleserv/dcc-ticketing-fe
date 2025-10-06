@@ -85,8 +85,15 @@ const Dashboard: React.FC = () => {
   const statCards = [
     { title: 'Total Tickets', value: stats.totalTickets, icon: Ticket, color: 'bg-blue-500', change: '+12%' },
     { title: 'Open Tickets', value: stats.openTickets, icon: Clock, color: 'bg-orange-500', change: '-5%' },
+    {
+      title: 'In Progress Tickets',
+      value: stats.progressTickets,
+      icon: TrendingUp,
+      color: 'bg-purple-500',
+      change: '-5%'
+    },
     { title: 'Resolved Today', value: stats.resolvedToday, icon: CheckCircle, color: 'bg-green-500', change: '+8%' },
-    { title: 'SLA Breached', value: stats.sla_breached, icon: AlertTriangle, color: 'bg-red-500', change: '-15%' }
+    { title: 'SLA Breached', value: stats.breachedTickets, icon: AlertTriangle, color: 'bg-red-500', change: '-15%' }
   ];
 
   return (
@@ -107,14 +114,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {statCards.map((stat, index) => (
           <div key={index} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                 <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                <p className="text-sm text-green-600 mt-1">{stat.change} from last week</p>
+                {/* <p className="text-sm text-green-600 mt-1">{stat.change} from last week</p> */}
               </div>
               <div className={`${stat.color} p-3 rounded-lg`}>
                 <stat.icon className="h-6 w-6 text-white" />

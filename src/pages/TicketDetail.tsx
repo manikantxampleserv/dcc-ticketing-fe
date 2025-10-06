@@ -17,7 +17,8 @@ import {
   Square,
   Star,
   User,
-  AlertTriangle
+  AlertTriangle,
+  UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -39,7 +40,6 @@ import { BusinessCountdown } from 'components/TicketTimer';
 import { RemarkModal } from 'components/TicketStatusModal';
 import { slaFn } from 'services/SLAConfiguration';
 import { TicketAttachmentsCard } from 'components/AttachmentsFile';
-
 interface PriorityBadgeProps {
   priority: string;
 }
@@ -77,6 +77,7 @@ export default function TicketDetail() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [mentionedUsers, setMentionedUsers] = useState<{ id: string; display: string }[]>([]);
+  const [showAllocateModal, setShowAllocateModal] = useState(false);
 
   const { data: slaData } = useQuery({
     queryKey: ['sla-configs'],
@@ -487,6 +488,7 @@ export default function TicketDetail() {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
+  const canAllocate = ticket?.status !== 'Closed' && ticket?.status !== 'Merged';
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -505,12 +507,27 @@ export default function TicketDetail() {
           {/* {ticket?.status === 'Closed' && ticket?.status === 'Merged' && ( */}
           {/* <TimeSpentTimer workStartedAt={ticket.start_timer_at!} time_spent_minutes={ticket?.time_spent_minutes} /> */}
           {/* // )} */}
+
           <BusinessCountdown
             workStartedAt={ticket.created_at!}
             totalSlaHours={slaDatas?.resolution_time_hours}
             businessStartTime={slaDatas?.business_start_time}
             businessEndTime={slaDatas?.business_end_time}
           />
+
+          <button
+            onClick={() => setShowAllocateModal(true)}
+            disabled={!canAllocate}
+            className={`flex items-center justify-center px-4 py-2 rounded-lg transition-colors ${
+              canAllocate
+                ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                : 'bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-200'
+            }`}
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+          </button>
+
+          {showAllocateModal && <AddButtonModal ticket_id={Number(id)} onClose={() => setShowAllocateModal(false)} />}
           {ticket?.sla_status === 'Breached' ? (
             <button
               disabled={isUpdatingProgress || isFetching}
