@@ -94,8 +94,11 @@ export const BusinessCountdown: React.FC<BusinessCountdownProps> = ({
   const ss = String(remaining % 60).padStart(2, '0');
 
   return (
-    <div className="inline-flex items-center space-x-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full font-mono text-lg">
-      <span className="animate-pulse block h-3 w-3 bg-blue-600 rounded-full" />
+    <div
+      title="Resolution Timer"
+      className="inline-flex items-center space-x-3 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-full font-medium text-xl"
+    >
+      <span className="animate-pulse block h-3 w-3 bg-red-700 rounded-full" />
       <span>
         {hh}:{mm}:{ss}
       </span>
