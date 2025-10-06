@@ -1,10 +1,11 @@
-import { Button, Modal, ModalClose, ModalDialog, Option, Sheet } from '@mui/joy';
+import { Button, Modal, ModalClose, ModalDialog, Sheet } from '@mui/joy';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFormik } from 'formik';
 import React from 'react';
 import toast from 'react-hot-toast';
-import { createRoleFn, updateRoleFn } from 'services/Roles'; // 👈 Role APIs
-import { Role } from 'types/Roles'; // 👈 Role type
+import { createRoleFn, updateRoleFn } from 'services/Roles'; // Role APIs
+import { Role } from 'types/Roles'; // Role type
+
 const ManageRole: React.FC<{
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -14,54 +15,56 @@ const ManageRole: React.FC<{
   const isEdit = !!selected;
   const client = useQueryClient();
 
+  const formik = useFormik({
+    initialValues: {
+      name: selected?.name || '',
+      is_active: selected?.is_active?.toString() || 'true',
+      created_at: selected?.created_at || new Date().toISOString().split('T')[0]
+    },
+    enableReinitialize: true,
+    onSubmit: values => {
+      const payload: Role = {
+        name: values.name,
+        is_active: values.is_active === 'true',
+        created_at: values.created_at
+      } as Role;
+
+      if (isEdit) {
+        updateRole({ id: selected?.id!, ...payload });
+      } else {
+        createRole(payload);
+      }
+    }
+  });
+
+  // ✅ Close modal & reset form
   const handleClose = () => {
     setOpen(false);
     setSelected(null);
+    formik.resetForm();
   };
 
   const { mutate: createRole, isPending: isCreating } = useMutation({
     mutationFn: createRoleFn,
-    onSuccess: res => {
+    onSuccess: async res => {
       toast.success(res.message || 'Role created successfully!');
       handleClose();
-      client.refetchQueries({ queryKey: ['roles'] });
+      await client.invalidateQueries({ queryKey: ['roles'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to create role!');
     }
   });
 
   const { mutate: updateRole, isPending: isUpdating } = useMutation({
     mutationFn: updateRoleFn,
-    onSuccess: response => {
-      toast.success(response.message || 'Role updated successfully!');
+    onSuccess: async res => {
+      toast.success(res.message || 'Role updated successfully!');
       handleClose();
-      client.refetchQueries({ queryKey: ['roles'] });
-    }
-  });
-
-  const initialValues = {
-    name: selected?.name || '',
-    is_active: selected?.is_active?.toString() || 'true',
-    created_at: selected?.created_at || new Date().toISOString().split('T')[0]
-  };
-
-  const formik = useFormik({
-    initialValues,
-    enableReinitialize: true,
-    onSubmit: values => {
-      if (isEdit) {
-        // Update only required fields
-        updateRole({
-          id: selected?.id!,
-          name: values.name,
-          is_active: values.is_active === 'true' // convert string back to boolean
-        } as Role);
-      } else {
-        // Create new role
-        createRole({
-          name: values.name,
-          is_active: values.is_active === 'true',
-          created_at: values.created_at
-        } as Role);
-      }
+      await client.invalidateQueries({ queryKey: ['roles'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to update role!');
     }
   });
 
@@ -91,7 +94,7 @@ const ManageRole: React.FC<{
             />
           </div>
 
-          {/* Status */}
+          {/* Status (optional) */}
           {/* <div className="flex flex-col gap-1 mb-3">
             <label className="text-sm font-medium">Status</label>
             <select
@@ -105,7 +108,7 @@ const ManageRole: React.FC<{
             </select>
           </div> */}
 
-          {/* Created At */}
+          {/* Created At (optional, read-only) */}
           {/* <div className="flex flex-col gap-1 mb-3">
             <label className="text-sm font-medium">Created At</label>
             <input

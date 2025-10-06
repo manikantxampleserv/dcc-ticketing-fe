@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import {
@@ -32,12 +31,11 @@ import {
 } from 'services/Ticket';
 import { usersFn } from 'services/users';
 import TicketActions from '../components/TicketActions';
-import { useTickets } from '../context/TicketContext';
 import TicketDetailSkeleton from './Ticket/TicketDetailSkeleton';
 // ✅ Import react-mentions
 import { Mention, MentionsInput } from 'react-mentions';
 import { Ticket } from 'types/index';
-import { BusinessCountdown, BusinessHoursTimer, Timer, TimeSpentTimer } from 'components/TicketTimer';
+import { BusinessCountdown } from 'components/TicketTimer';
 import { RemarkModal } from 'components/TicketStatusModal';
 import { slaFn } from 'services/SLAConfiguration';
 import { TicketAttachmentsCard } from 'components/AttachmentsFile';

@@ -23,35 +23,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ open, setOpen, selected, setS
   const isEdit = !!selected;
   const client = useQueryClient();
 
-  const handleClose = () => {
-    setOpen(false);
-    setSelected(null);
-  };
-
-  // Fetch roles & departments
-  const { data: rolesData } = useQuery({ queryKey: ['roles'], queryFn: () => rolesFn({}) });
-  const { data: departmentsData } = useQuery({ queryKey: ['departments'], queryFn: () => departmentsFn() });
-  const roles = rolesData?.data || [];
-  const departments = departmentsData?.data || [];
-
-  const { mutate: createUser, isPending: isCreatingUser } = useMutation({
-    mutationFn: createUserFn,
-    onSuccess: res => {
-      toast.success(res.message);
-      handleClose();
-      client.refetchQueries({ queryKey: ['users'] });
-    }
-  });
-
-  const { mutate: updateUser, isPending: isUpdatingUser } = useMutation({
-    mutationFn: updateUserFn,
-    onSuccess: res => {
-      toast.success(res.message);
-      handleClose();
-      client.refetchQueries({ queryKey: ['users'] });
-    }
-  });
-
+  // ✅ Formik initial values
   const initialValues = {
     first_name: selected?.first_name || '',
     last_name: selected?.last_name || '',
@@ -69,9 +41,46 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ open, setOpen, selected, setS
     initialValues,
     enableReinitialize: true,
     onSubmit: values => {
-      if (isEdit) updateUser({ ...values, id: selected?.id } as unknown as User);
-      else createUser(values as any);
+      const payload = {
+        ...values,
+        is_active: values.is_active === 'true' || values.is_active === true
+      };
+
+      if (isEdit) updateUser({ ...payload, id: selected?.id } as User);
+      else createUser(payload as User);
     }
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelected(null);
+    formik.resetForm();
+  };
+
+  // Fetch roles & departments
+  const { data: rolesData } = useQuery({ queryKey: ['roles'], queryFn: () => rolesFn({}) });
+  const { data: departmentsData } = useQuery({ queryKey: ['departments'], queryFn: () => departmentsFn() });
+  const roles = rolesData?.data || [];
+  const departments = departmentsData?.data || [];
+
+  const { mutate: createUser, isPending: isCreatingUser } = useMutation({
+    mutationFn: createUserFn,
+    onSuccess: async res => {
+      toast.success(res.message || 'User created successfully!');
+      handleClose();
+      await client.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: err => toast.error(err.message || 'Failed to create user!')
+  });
+
+  const { mutate: updateUser, isPending: isUpdatingUser } = useMutation({
+    mutationFn: updateUserFn,
+    onSuccess: async res => {
+      toast.success(res.message || 'User updated successfully!');
+      handleClose();
+      await client.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: err => toast.error(err.message || 'Failed to update user!')
   });
 
   return (
@@ -85,7 +94,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ open, setOpen, selected, setS
         <div className="flex justify-between items-center">
           <div>
             <p className="text-lg font-semibold">{isEdit ? 'Edit User' : 'Create User'}</p>
-            <p className="text-sm text-gray-500">Fill in the information of the user.</p>
+            <p className="text-sm text-gray-500">Fill in the user information below.</p>
           </div>
           <ModalClose onClick={handleClose} />
         </div>
@@ -103,7 +112,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ open, setOpen, selected, setS
             )}
 
             <CustomSelect label="Role" name="role_id" formik={formik}>
-              {roles.map((role: any) => (
+              {roles.map(role => (
                 <Option key={role.id} value={role.id}>
                   {role.name}
                 </Option>
@@ -111,7 +120,7 @@ const ManageUsers: React.FC<ManageUsersProps> = ({ open, setOpen, selected, setS
             </CustomSelect>
 
             <CustomSelect label="Department" name="department_id" formik={formik}>
-              {departments.map((dept: any) => (
+              {departments.map(dept => (
                 <Option key={dept.id} value={dept.id}>
                   {dept.department_name}
                 </Option>

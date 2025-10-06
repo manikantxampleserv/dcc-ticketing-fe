@@ -129,7 +129,6 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 bg-white rounded-xl shadow-md border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Tickets</h2>
           <TicketTable
-            setOpen={setOpen}
             fetchTickets={true}
             // pageSize={5}
             // pagination={null}

@@ -197,7 +197,11 @@ const ManageTickets: React.FC<ManageTicketsProps> = ({ open, setOpen, selected, 
                 </Option>
               ))}
             </CustomSelect>
-            <CustomSelect label="Subject" required name="subject" formik={formik} placeholder="Enter ticket subject" />
+            <FormControl>
+              <FormLabel required>Subject </FormLabel>
+              <CustomInput label="" type="text" name="subject" formik={formik} placeholder="Enter ticket subject..." />
+            </FormControl>
+
             <CustomSelect
               label="Assigned Agent"
               required

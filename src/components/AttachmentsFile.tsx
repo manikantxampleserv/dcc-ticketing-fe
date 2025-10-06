@@ -36,10 +36,8 @@ export const TicketAttachmentsCard: React.FC<TicketAttachmentsCardProps> = ({ ti
       try {
         setState({ attachments: [], loading: true, error: null });
         const id = (ticketId as any)?.id ?? ticketId;
-        console.log('Fetching attachments for ticketId:', id);
 
         const data = await ticketAttachmentFn(id);
-        console.log('Fetched attachments:', data);
 
         if (isMounted) {
           setState({

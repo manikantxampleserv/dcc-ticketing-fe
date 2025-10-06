@@ -122,12 +122,7 @@ const CompanyManagement = () => {
             placement="top"
             onConfirm={() => deleteCompanies({ ids: [Number(record.id)] })}
           >
-            <IconButton
-              size="sm"
-              variant="plain"
-              color="danger"
-              onClick={e => e.stopPropagation()} // सिर्फ row click रोकने के लिए
-            >
+            <IconButton size="sm" variant="plain" color="danger" onClick={e => e.stopPropagation()}>
               <Trash2 size={16} />
             </IconButton>
           </PopConfirm>

@@ -86,6 +86,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
       <Input
         name={name}
         type={inputType}
+        required={required}
         value={fieldValue}
         placeholder={placeholder || `Enter ${label.toLowerCase()}`}
         onChange={handleChange}

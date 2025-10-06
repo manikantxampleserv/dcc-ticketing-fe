@@ -3,8 +3,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useFormik } from 'formik';
 import React from 'react';
 import toast from 'react-hot-toast';
-import { createDepartmentFn, updateDepartmentFn } from 'services/Department'; // 👈 Department APIs
-import { Department } from 'types/Departments'; // 👈 Department type
+import { createDepartmentFn, updateDepartmentFn } from 'services/Department'; // Department APIs
+import { Department } from 'types/Departments'; // Department type
 
 const ManageDepartment: React.FC<{
   open: boolean;
@@ -15,52 +15,56 @@ const ManageDepartment: React.FC<{
   const isEdit = !!selected;
   const client = useQueryClient();
 
+  const formik = useFormik({
+    initialValues: {
+      department_name: selected?.department_name || '',
+      is_active: selected?.is_active?.toString() || 'true',
+      created_at: selected?.created_at || new Date().toISOString().split('T')[0]
+    },
+    enableReinitialize: true,
+    onSubmit: values => {
+      const payload: Department = {
+        department_name: values.department_name,
+        is_active: values.is_active === 'true',
+        created_at: values.created_at
+      } as Department;
+
+      if (isEdit) {
+        updateDepartment({ id: selected?.id, ...payload });
+      } else {
+        createDepartment(payload);
+      }
+    }
+  });
+
+  // ✅ Close modal & reset form
   const handleClose = () => {
     setOpen(false);
     setSelected(null);
+    formik.resetForm();
   };
 
   const { mutate: createDepartment, isPending: isCreating } = useMutation({
     mutationFn: createDepartmentFn,
-    onSuccess: res => {
+    onSuccess: async res => {
       toast.success(res.message || 'Department created successfully!');
       handleClose();
-      client.refetchQueries({ queryKey: ['departments'] });
+      await client.invalidateQueries({ queryKey: ['departments'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to create department!');
     }
   });
 
   const { mutate: updateDepartment, isPending: isUpdating } = useMutation({
     mutationFn: updateDepartmentFn,
-    onSuccess: response => {
-      toast.success(response.message || 'Department updated successfully!');
+    onSuccess: async res => {
+      toast.success(res.message || 'Department updated successfully!');
       handleClose();
-      client.refetchQueries({ queryKey: ['departments'] });
-    }
-  });
-
-  const initialValues = {
-    department_name: selected?.department_name || '',
-    is_active: selected?.is_active?.toString() || 'true',
-    created_at: selected?.created_at || new Date().toISOString().split('T')[0]
-  };
-
-  const formik = useFormik({
-    initialValues,
-    enableReinitialize: true,
-    onSubmit: values => {
-      if (isEdit) {
-        updateDepartment({
-          id: selected?.id,
-          department_name: values.department_name,
-          is_active: values.is_active === 'true'
-        } as Department);
-      } else {
-        createDepartment({
-          department_name: values.department_name,
-          is_active: values.is_active === 'true',
-          created_at: values.created_at
-        } as Department);
-      }
+      await client.invalidateQueries({ queryKey: ['departments'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to update department!');
     }
   });
 
@@ -90,7 +94,7 @@ const ManageDepartment: React.FC<{
             />
           </div>
 
-          {/* (Optional) Status */}
+          {/* Status (optional) */}
           {/* <div className="flex flex-col gap-1 mb-3">
             <label className="text-sm font-medium">Status</label>
             <select
@@ -102,6 +106,18 @@ const ManageDepartment: React.FC<{
               <option value="true">Active</option>
               <option value="false">Inactive</option>
             </select>
+          </div> */}
+
+          {/* Created At */}
+          {/* <div className="flex flex-col gap-1 mb-3">
+            <label className="text-sm font-medium">Created At</label>
+            <input
+              type="text"
+              name="created_at"
+              value={formik.values.created_at}
+              disabled
+              className="border rounded-md px-3 py-2 bg-gray-100 cursor-not-allowed"
+            />
           </div> */}
 
           {/* Actions */}

@@ -38,6 +38,7 @@ const navigation = [
   //   icon: UserCog
   // }
 ];
+
 const Sidebar: React.FC = () => {
   const { state } = useTickets();
   const location = useLocation();

@@ -15,55 +15,58 @@ const ManageCategory: React.FC<{
   const isEdit = !!selected;
   const client = useQueryClient();
 
+  const formik = useFormik({
+    initialValues: {
+      category_name: selected?.category_name || '',
+      description: selected?.description || '',
+      is_active: selected?.is_active?.toString() || 'true',
+      created_at: selected?.created_at || new Date().toISOString().split('T')[0]
+    },
+    enableReinitialize: true,
+    onSubmit: values => {
+      const payload: Category = {
+        category_name: values.category_name,
+        description: values.description,
+        is_active: values.is_active === 'true',
+        created_at: values.created_at
+      } as Category;
+
+      if (isEdit) {
+        updateCategory({ id: selected?.id!, ...payload });
+      } else {
+        createCategory(payload);
+      }
+    }
+  });
+
+  // ✅ handleClose will also reset form
   const handleClose = () => {
     setOpen(false);
     setSelected(null);
+    formik.resetForm();
   };
 
   const { mutate: createCategory, isPending: isCreating } = useMutation({
     mutationFn: createCategoryFn,
-    onSuccess: res => {
+    onSuccess: async res => {
       toast.success(res.message || 'Category created successfully!');
       handleClose();
-      client.refetchQueries({ queryKey: ['categories'] });
+      await client.invalidateQueries({ queryKey: ['categories'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to create category!');
     }
   });
 
   const { mutate: updateCategory, isPending: isUpdating } = useMutation({
     mutationFn: updateCategoryFn,
-    onSuccess: response => {
-      toast.success(response.message || 'Category updated successfully!');
+    onSuccess: async res => {
+      toast.success(res.message || 'Category updated successfully!');
       handleClose();
-      client.refetchQueries({ queryKey: ['categories'] });
-    }
-  });
-
-  const initialValues = {
-    category_name: selected?.category_name || '',
-    description: selected?.description || '', // 👈 Assuming categories have description
-    is_active: selected?.is_active?.toString() || 'true',
-    created_at: selected?.created_at || new Date().toISOString().split('T')[0]
-  };
-
-  const formik = useFormik({
-    initialValues,
-    enableReinitialize: true,
-    onSubmit: values => {
-      if (isEdit) {
-        updateCategory({
-          id: selected?.id!,
-          category_name: values.category_name,
-          description: values.description,
-          is_active: values.is_active === 'true'
-        } as Category);
-      } else {
-        createCategory({
-          category_name: values.category_name,
-          description: values.description,
-          is_active: values.is_active === 'true',
-          created_at: values.created_at
-        } as Category);
-      }
+      await client.invalidateQueries({ queryKey: ['categories'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to update category!');
     }
   });
 

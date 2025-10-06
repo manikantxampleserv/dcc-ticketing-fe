@@ -9,7 +9,6 @@ import CustomInput from 'shared/CustomInput';
 import CustomRadioInput from 'shared/CustomRadioInput';
 import CustomSelect from 'shared/CustomSelect';
 import { Customer } from 'types/Customers';
-import { boolean } from 'yup';
 
 const ManageCustomers: React.FC<{
   open: boolean;
@@ -23,9 +22,10 @@ const ManageCustomers: React.FC<{
   const handleClose = () => {
     setOpen(false);
     setSelected(null);
+    formik.resetForm();
   };
 
-  // ✅ Fetch companies list
+  // Fetch companies list
   const { data: companiesData, isLoading: isCompaniesLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: () => companiesFn({})
@@ -33,21 +33,25 @@ const ManageCustomers: React.FC<{
 
   const { mutate: createCustomer, isPending: isCreatingCustomer } = useMutation({
     mutationFn: createCustomerFn,
-    onSuccess: response => {
-      toast.success(response.message);
-      setOpen(false);
-      setSelected(null);
-      client.refetchQueries({ queryKey: ['customers'] });
+    onSuccess: async response => {
+      toast.success(response.message || 'Customer created successfully!');
+      handleClose();
+      await client.invalidateQueries({ queryKey: ['customers'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to create customer!');
     }
   });
 
   const { mutate: updateCustomer, isPending: isUpdatingCustomer } = useMutation({
     mutationFn: updateCustomerFn,
-    onSuccess: response => {
-      toast.success(response.message);
-      setOpen(false);
-      setSelected(null);
-      client.refetchQueries({ queryKey: ['customers'] });
+    onSuccess: async response => {
+      toast.success(response.message || 'Customer updated successfully!');
+      handleClose();
+      await client.invalidateQueries({ queryKey: ['customers'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to update customer!');
     }
   });
 
@@ -58,7 +62,7 @@ const ManageCustomers: React.FC<{
     email: selected?.email || '',
     phone: selected?.phone || '',
     job_title: selected?.job_title || '',
-    is_active: selected?.is_active || 'true',
+    is_active: selected?.is_active?.toString() || 'true',
     created_at: selected?.created_at || ''
   };
 
@@ -68,7 +72,7 @@ const ManageCustomers: React.FC<{
     onSubmit: values => {
       const processedValues = {
         ...values,
-        is_active: Boolean(values.is_active === 'true' || values.is_active === true)
+        is_active: values.is_active === 'true' || values.is_active === true
       };
 
       if (isEdit) {
@@ -90,13 +94,14 @@ const ManageCustomers: React.FC<{
         <div className="flex justify-between items-center">
           <div>
             <p className="text-lg font-semibold">{isEdit ? 'Edit Customer' : 'Create Customer'}</p>
-            <p className="text-sm text-gray-500">Fill in the information of the user.</p>
+            <p className="text-sm text-gray-500">Fill in the customer information below.</p>
           </div>
-          <ModalClose onClick={() => setOpen(false)} />
+          <ModalClose onClick={handleClose} />
         </div>
+
         <form onSubmit={formik.handleSubmit}>
           <div className="grid lg:grid-cols-2 gap-4">
-            {/* Company Select from API */}
+            {/* Company Select */}
             <CustomSelect label="Company" name="company_id" formik={formik}>
               {isCompaniesLoading ? (
                 <Option value="">Loading...</Option>
@@ -126,9 +131,11 @@ const ManageCustomers: React.FC<{
               ]}
             />
 
-            {/* Created At - only show when editing */}
+            {/* Created At - only show in edit mode */}
             {isEdit && <CustomInput label="Created At" name="created_at" formik={formik} disabled />}
           </div>
+
+          {/* Actions */}
           <div className="flex justify-end gap-3 pt-5">
             <Button color="neutral" onClick={handleClose}>
               Cancel

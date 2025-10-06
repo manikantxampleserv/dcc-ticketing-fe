@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { dashboardFn, DashboardStats } from '../../services/Dashboard';
 import Loader from '../../components/Loader';
 import { toast } from 'react-hot-toast';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const QuickStats: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -24,34 +25,41 @@ const QuickStats: React.FC = () => {
     fetchStats();
   }, []);
 
-  if (loading) {
-    return <Loader message="Loading Quick Stats..." />;
-  }
+  if (loading) return <Loader message="Loading Quick Stats..." />;
+  if (!stats) return <p className="text-center text-red-500">No stats available</p>;
 
-  if (!stats) {
-    return <p className="text-center text-red-500">No stats available</p>;
-  }
+  const data = [
+    { name: 'Open Tickets', value: stats.openTickets || 0, color: '#3b82f6' },
+    { name: 'Total Tickets', value: stats.totalTickets || 0, color: '#10b981' },
+    { name: 'In Progress', value: stats.progressTickets || 0, color: '#facc15' },
+    { name: 'SLA Breached', value: stats.breachedTickets || 0, color: '#ef4444' }
+  ];
 
   return (
-    <div className="p-4 border-t border-gray-200 mt-8 bg-white rounded-lg shadow-sm">
-      <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Stats</h3>
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Open Tickets</span>
-          <span className="font-medium text-blue-600">{stats.openTickets || 0}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Total Tickets</span>
-          <span className="font-medium text-blue-600">{stats.totalTickets || 0}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">In Progress</span>
-          <span className="font-medium text-orange-600">{stats.progressTickets || 0}</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">SLA Breached</span>
-          <span className="font-medium text-red-600">{stats.breachedTickets || 0}</span>
-        </div>
+    <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-100 max-w-[220px] mx-auto p-2 ml-2">
+      <h3 className="text-sm font-medium text-gray-900 text-center ">Quick Stats</h3>
+      <div className="w-full h-[150px]">
+        <ResponsiveContainer width="120%" height="120%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={50} // smaller radius
+              innerRadius={25} // smaller donut hole
+              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+              // only percent for compactness
+            >
+              {data.map(entry => (
+                <Cell key={entry.name} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value: number) => value} />
+            <Legend verticalAlign="bottom" height={20} iconSize={10} wrapperStyle={{ fontSize: '10px' }} />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

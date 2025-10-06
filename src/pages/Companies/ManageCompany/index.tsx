@@ -15,29 +15,6 @@ const ManageCompany: React.FC<{
   const isEdit = !!selected;
   const client = useQueryClient();
 
-  const handleClose = () => {
-    setOpen(false);
-    setSelected(null);
-  };
-
-  const { mutate: createCompany, isPending: isCreating } = useMutation({
-    mutationFn: createCompanyFn,
-    onSuccess: res => {
-      toast.success(res.message || 'Company created successfully!');
-      handleClose();
-      client.refetchQueries({ queryKey: ['companies'] });
-    }
-  });
-
-  const { mutate: updateCompany, isPending: isUpdating } = useMutation({
-    mutationFn: updateCompanyFn,
-    onSuccess: response => {
-      toast.success(response.message || 'Company updated successfully!');
-      handleClose();
-      client.refetchQueries({ queryKey: ['companies'] });
-    }
-  });
-
   const formik = useFormik({
     initialValues: {
       company_name: selected?.company_name || '',
@@ -50,18 +27,46 @@ const ManageCompany: React.FC<{
     },
     enableReinitialize: true,
     onSubmit: values => {
+      const payload: Company = {
+        ...values,
+        is_active: values.is_active === 'true'
+      } as Company;
+
       if (isEdit) {
-        updateCompany({
-          id: selected?.id!,
-          ...values,
-          is_active: values.is_active === 'true'
-        } as Company);
+        updateCompany({ id: selected?.id!, ...payload });
       } else {
-        createCompany({
-          ...values,
-          is_active: values.is_active === 'true'
-        } as Company);
+        createCompany(payload);
       }
+    }
+  });
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelected(null);
+    formik.resetForm();
+  };
+
+  const { mutate: createCompany, isPending: isCreating } = useMutation({
+    mutationFn: createCompanyFn,
+    onSuccess: async res => {
+      toast.success(res.message || 'Company created successfully!');
+      handleClose();
+      await client.invalidateQueries({ queryKey: ['companies'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to create company!');
+    }
+  });
+
+  const { mutate: updateCompany, isPending: isUpdating } = useMutation({
+    mutationFn: updateCompanyFn,
+    onSuccess: async res => {
+      toast.success(res.message || 'Company updated successfully!');
+      handleClose();
+      await client.invalidateQueries({ queryKey: ['companies'] });
+    },
+    onError: err => {
+      toast.error(err.message || 'Failed to update company!');
     }
   });
 
@@ -76,7 +81,7 @@ const ManageCompany: React.FC<{
           <ModalClose onClick={handleClose} />
         </div>
 
-        <form onSubmit={formik.handleSubmit} className="mt-4 space-y-3 row-6">
+        <form onSubmit={formik.handleSubmit} className="mt-4 space-y-3">
           <div>
             <label className="text-sm font-medium">Company Name</label>
             <input
@@ -86,7 +91,7 @@ const ManageCompany: React.FC<{
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
               required
-              placeholder="Select  Company Name"
+              placeholder="Enter Company Name"
             />
           </div>
 
@@ -99,7 +104,7 @@ const ManageCompany: React.FC<{
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
               required
-              placeholder="Select Domain"
+              placeholder="Enter Domain"
             />
           </div>
 
@@ -111,7 +116,7 @@ const ManageCompany: React.FC<{
               value={formik.values.contact_email}
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
-              placeholder="Select Contact Email"
+              placeholder="Enter Contact Email"
             />
           </div>
 
@@ -123,7 +128,7 @@ const ManageCompany: React.FC<{
               value={formik.values.contact_phone}
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
-              placeholder="Select Contact Phone"
+              placeholder="Enter Contact Phone"
             />
           </div>
 
@@ -135,7 +140,7 @@ const ManageCompany: React.FC<{
               onChange={formik.handleChange}
               className="border rounded-md px-3 py-2 w-full"
               rows={3}
-              placeholder="Select Address"
+              placeholder="Enter Address"
             />
           </div>
 
