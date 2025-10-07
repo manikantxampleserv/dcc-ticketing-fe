@@ -61,7 +61,7 @@ const AllocateTicketModal: React.FC<AllocateTicketModalProps> = ({ onClose, tick
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">
-          Add <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-sm">(CC)</span>
+          Add User in <span className=" text-blue-700 px-2 py-0.5 rounded-full text-sm"> (CC)</span>
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -72,25 +72,12 @@ const AllocateTicketModal: React.FC<AllocateTicketModalProps> = ({ onClose, tick
             onChange={e => setSelectedUserId(Number(e.target.value))}
             required
           >
-            <option value="">Select an agent</option>
             {agents.map(a => (
               <option key={a.id} value={a.id}>
                 {a.first_name} {a.last_name}
               </option>
             ))}
           </select>
-
-          {/* Optional reason */}
-          <div>
-            <label className="block text-gray-700 mb-1">Reason (optional)</label>
-            <input
-              type="text"
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter reason"
-            />
-          </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3 pt-4">

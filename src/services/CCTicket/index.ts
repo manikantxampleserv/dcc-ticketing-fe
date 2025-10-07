@@ -1,5 +1,4 @@
 // services/CCTicket.ts
-import axios from 'axios';
 import axiosInstance from 'configs/axios';
 import withToast from 'utils/withToast';
 
@@ -23,3 +22,5 @@ export const addCcToTicket = async (params: AddCcParams) => {
     throw error;
   }
 };
+
+// services/CCTicket.ts

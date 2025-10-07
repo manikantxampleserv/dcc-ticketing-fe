@@ -40,6 +40,7 @@ import { BusinessCountdown } from 'components/TicketTimer';
 import { RemarkModal } from 'components/TicketStatusModal';
 import { slaFn } from 'services/SLAConfiguration';
 import { TicketAttachmentsCard } from 'components/AttachmentsFile';
+import AddButtonModal from './Users/CC/AddCCModal';
 interface PriorityBadgeProps {
   priority: string;
 }
@@ -74,7 +75,6 @@ export default function TicketDetail() {
   const [searchUser, setSearchUser] = useState('');
   const [search, setSearch] = useState('');
   // ✅ Add mentions state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [mentionedUsers, setMentionedUsers] = useState<{ id: string; display: string }[]>([]);
   const [showAllocateModal, setShowAllocateModal] = useState(false);
@@ -1065,6 +1065,33 @@ export default function TicketDetail() {
                   <span className="text-sm text-gray-900">
                     {ticket?.created_at && format(new Date(ticket.created_at), 'MMM d, yyyy HH:mm')}
                   </span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">CC User</label>
+                <div className="mt-1 flex flex-wrap flex-col gap-2">
+                  {ticket?.cc_of_ticket && ticket?.cc_of_ticket?.length > 0 ? (
+                    ticket?.cc_of_ticket?.map((cc: any) => {
+                      return (
+                        <div key={cc.id} className="flex items-center">
+                          {cc?.user_of_ticket_cc?.avatar && (
+                            <img
+                              src={cc?.user_of_ticket_cc.avatar}
+                              alt={cc?.user_of_ticket_cc.first_name + ' ' + cc?.user_of_ticket_cc.last_name}
+                              className="h-6 w-6 rounded-full mr-2"
+                            />
+                          )}
+                          <span className="text-sm text-gray-900">
+                            {cc?.user_of_ticket_cc
+                              ? `${cc?.user_of_ticket_cc.first_name} ${cc?.user_of_ticket_cc.last_name}`
+                              : `User ID: ${cc.cc?.user_of_ticket_cc_id}`}
+                          </span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span className="text-sm text-gray-500">Unassigned</span>
+                  )}
                 </div>
               </div>
 
